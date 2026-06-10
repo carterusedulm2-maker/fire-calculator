@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FIRE 計算機</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f2;
+      --panel: #ffffff;
+      --panel-soft: #f9faf7;
+      --ink: #1b1d1c;
+      --muted: #65706a;
+      --line: #d8ddd5;
+      --green: #217c63;
+      --green-soft: #e7f4ee;
+      --blue: #2864a9;
+      --blue-soft: #e8f0fb;
+      --orange: #b75c1d;
+      --orange-soft: #fff0e4;
+      --red: #b53d3d;
+      --red-soft: #faeaea;
+      --yellow: #a88418;
+      --shadow: 0 16px 42px rgb(30 35 32 / 10%);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .input-panel {
+      background: #fbfcf8;
+      border-right: 1px solid var(--line);
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .input-sticky {
+      display: grid;
+      gap: 18px;
+      max-width: 430px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.45rem, 1.2rem + 0.6vw, 1.9rem);
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 6px;
+    }
+
+    .pill {
+      align-items: center;
+      background: var(--green-soft);
+      border: 1px solid #c7e5d9;
+      border-radius: 999px;
+      color: var(--green);
+      display: inline-flex;
+      font-size: 0.78rem;
+      font-weight: 700;
+      gap: 6px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .tool-section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgb(36 42 39 / 5%);
+      padding: 16px;
+    }
+
+    .section-title {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-title h2 {
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    label {
+      color: #313633;
+      display: grid;
+      font-size: 0.78rem;
+      font-weight: 700;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    input[type="number"],
+    select {
+      appearance: textfield;
+      background: #fff;
+      border: 1px solid #cfd6cd;
+      border-radius: 7px;
+      color: var(--ink);
+      min-height: 42px;
+      padding: 10px 11px;
+      width: 100%;
+    }
+
+    input[type="number"]:focus,
+    select:focus,
+    input[type="range"]:focus-visible,
+    button:focus-visible {
+      outline: 3px solid rgb(40 100 169 / 25%);
+      outline-offset: 2px;
+    }
+
+    input[type="range"] {
+      accent-color: var(--green);
+      width: 100%;
+    }
+
+    .range-field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .range-top {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .range-value {
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .toggle-row {
+      align-items: center;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: flex;
+      gap: 10px;
+      padding: 10px 11px;
+    }
+
+    .toggle-row input {
+      height: 18px;
+      width: 18px;
+    }
+
+    .toggle-row span {
+      color: #313633;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .button-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .button-row button {
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 800;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 12px;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      width: 100%;
+    }
+
+    .button-row button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-btn {
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 9px 20px rgb(33 124 99 / 22%);
+    }
+
+    .secondary-btn {
+      background: #fff;
+      border-color: #cbd5d0;
+      color: #26302b;
+    }
+
+    .output-panel {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+    }
+
+    .summary-strip {
+      align-items: stretch;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+      min-height: 124px;
+      padding: 16px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: clamp(1.3rem, 1rem + 1vw, 2rem);
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+
+    .metric small {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .metric.green {
+      border-top: 4px solid var(--green);
+    }
+
+    .metric.blue {
+      border-top: 4px solid var(--blue);
+    }
+
+    .metric.orange {
+      border-top: 4px solid var(--orange);
+    }
+
+    .metric.red {
+      border-top: 4px solid var(--red);
+    }
+
+    .workspace-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+    }
+
+    .workspace-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 0;
+      padding: 18px;
+    }
+
+    .card-head {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-head h2 {
+      font-size: 1rem;
+    }
+
+    .legend {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .legend span {
+      align-items: center;
+      color: var(--muted);
+      display: inline-flex;
+      font-size: 0.76rem;
+      font-weight: 800;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      border-radius: 50%;
+      display: inline-block;
+      height: 9px;
+      width: 9px;
+    }
+
+    .dot.green {
+      background: var(--green);
+    }
+
+    .dot.blue {
+      background: var(--blue);
+    }
+
+    .dot.orange {
+      background: var(--orange);
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      cursor: crosshair;
+      height: 360px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas {
+      display: block;
+      height: 360px;
+      width: 100%;
+    }
+
+    .chart-tooltip {
+      background: rgb(255 255 255 / 96%);
+      border: 1px solid #cfd6cd;
+      border-radius: var(--radius);
+      box-shadow: 0 18px 42px rgb(30 35 32 / 18%);
+      color: var(--ink);
+      left: 0;
+      max-width: min(340px, calc(100% - 24px));
+      min-width: 270px;
+      opacity: 0;
+      padding: 12px;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      transform: translateY(6px);
+      transition: opacity 120ms ease, transform 120ms ease;
+      visibility: hidden;
+      z-index: 4;
+    }
+
+    .chart-tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+    }
+
+    .tooltip-title {
+      font-size: 0.9rem;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+
+    .tooltip-meta {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .tooltip-grid {
+      display: grid;
+      gap: 6px;
+    }
+
+    .tooltip-row {
+      align-items: baseline;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .tooltip-row span {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .tooltip-row strong {
+      font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .tooltip-divider {
+      border-top: 1px solid var(--line);
+      margin: 8px 0 2px;
+    }
+
+    .timeline-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-item {
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 12px minmax(0, 1fr) auto;
+      min-height: 62px;
+      padding: 12px;
+    }
+
+    .timeline-bar {
+      border-radius: 999px;
+      height: 38px;
+      width: 6px;
+    }
+
+    .timeline-title {
+      font-weight: 900;
+    }
+
+    .timeline-copy {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .timeline-value {
+      font-size: 1.05rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .asset-bars {
+      display: grid;
+      gap: 12px;
+    }
+
+    .asset-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .asset-top {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .asset-name,
+    .asset-amount {
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .bar-track {
+      background: #edf0eb;
+      border-radius: 999px;
+      height: 9px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      border-radius: 999px;
+      display: block;
+      height: 100%;
+      min-width: 3px;
+      transition: width 160ms ease;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 11px 8px;
+      text-align: right;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      white-space: normal;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    td {
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 750;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .warning-box {
+      background: var(--orange-soft);
+      border: 1px solid #f1c39e;
+      border-radius: var(--radius);
+      color: #65310e;
+      display: none;
+      font-size: 0.86rem;
+      font-weight: 750;
+      padding: 12px 14px;
+    }
+
+    .warning-box.show {
+      display: block;
+    }
+
+    .disclaimer {
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0 2px 8px;
+    }
+
+    @media (max-width: 1180px) {
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .input-panel {
+        border-bottom: 1px solid var(--line);
+        border-right: 0;
+      }
+
+      .input-sticky {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .input-panel,
+      .output-panel {
+        padding: 14px;
+      }
+
+      .brand-row,
+      .card-head,
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .field-grid,
+      .summary-strip,
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+
+      .metric {
+        min-height: auto;
+      }
+
+      .timeline-item {
+        grid-template-columns: 10px minmax(0, 1fr);
+      }
+
+      .timeline-value {
+        grid-column: 2;
+      }
+
+      canvas {
+        height: 300px;
+      }
+
+      .chart-wrap {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="input-panel" aria-label="輸入區">
+      <div class="input-sticky">
+        <div class="brand-row">
+          <div>
+            <h1>FIRE 計算機</h1>
+            <p class="subtitle">現金流、資產、房貸與信貸的年度推演。</p>
+          </div>
+          <span class="pill">TWD</span>
+        </div>
+
+        <form id="fireForm" autocomplete="off">
+          <section class="tool-section" aria-labelledby="cashflow-title">
+            <div class="section-title">
+              <h2 id="cashflow-title">現金流</h2>
+              <span class="section-note">每年金額</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                目前年齡
+                <input type="number" min="18" max="90" step="1" data-field="currentAge">
+              </label>
+              <label>
+                年收入
+                <input type="number" min="0" step="10000" data-field="annualIncome">
+              </label>
+              <label>
+                年支出
+                <input type="number" min="0" step="10000" data-field="annualExpenses">
+              </label>
+              <label>
+                收入年成長率 %
+                <input type="number" min="-20" max="30" step="0.1" data-field="incomeGrowth">
+              </label>
+            </div>
+          </section>
+
+          <section class="tool-section" aria-labelledby="assets-title">
+            <div class="section-title">
+              <h2 id="assets-title">目前資產</h2>
+              <span class="section-note">現值</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                現金
+                <input type="number" min="0" step="10000" data-field="cash">
+              </label>
+              <label>
+                股票 / ETF
+                <input type="number" min="0" step="10000" data-field="stocks">
+              </label>
+              <label>
+                債券 / 定收
+                <input type="number" min="0" step="10000" data-field="bonds">
+              </label>
+              <label>
+                不動產
+                <input type="number" min="0" step="10000" data-field="realEstate">
+              </label>
+              <label>
+                其他可投資資產
+                <input type="number" min="0" step="10000" data-field="otherAssets">
+              </label>
+              <label>
+                其他資產報酬 %
+                <input type="number" min="-20" max="30" step="0.1" data-field="otherReturn">
+              </label>
+            </div>
+            <label class="toggle-row">
+              <input type="checkbox" data-field="includeRealEstate">
+              <span>把不動產納入 FIRE 可提領資產</span>
+            </label>
+          </section>
+
+          <section class="tool-section" aria-labelledby="debt-title">
+            <div class="section-title">
+              <h2 id="debt-title">貸款</h2>
+              <span class="section-note">每月還款</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                房貸月付
+                <input type="number" min="0" step="1000" data-field="mortgagePayment">
+              </label>
+              <label>
+                房貸剩餘年限
+                <input type="number" min="0" max="50" step="0.5" data-field="mortgageYears">
+              </label>
+              <label>
+                房貸利率 %
+                <input type="number" min="0" max="20" step="0.05" data-field="mortgageApr">
+              </label>
+              <label>
+                房貸剩餘本金
+                <input type="number" min="0" step="10000" placeholder="可留空自動估算" data-field="mortgageBalance">
+              </label>
+              <label>
+                信貸月付
+                <input type="number" min="0" step="1000" data-field="loanPayment">
+              </label>
+              <label>
+                信貸剩餘年限
+                <input type="number" min="0" max="15" step="0.5" data-field="loanYears">
+              </label>
+              <label>
+                信貸利率 %
+                <input type="number" min="0" max="40" step="0.1" data-field="loanApr">
+              </label>
+              <label>
+                信貸剩餘本金
+                <input type="number" min="0" step="10000" placeholder="可留空自動估算" data-field="loanBalance">
+              </label>
+            </div>
+          </section>
+
+          <section class="tool-section" aria-labelledby="assumptions-title">
+            <div class="section-title">
+              <h2 id="assumptions-title">假設值</h2>
+              <span class="section-note">可調整</span>
+            </div>
+            <div class="field-grid single">
+              <label class="range-field">
+                <span class="range-top">安全提領率 <strong class="range-value" data-output="safeWithdrawalRate"></strong></span>
+                <input type="range" min="2.5" max="5" step="0.1" data-field="safeWithdrawalRate">
+              </label>
+              <label class="range-field">
+                <span class="range-top">通膨率 <strong class="range-value" data-output="inflationRate"></strong></span>
+                <input type="range" min="0" max="8" step="0.1" data-field="inflationRate">
+              </label>
+              <label class="range-field">
+                <span class="range-top">股票年報酬 <strong class="range-value" data-output="stockReturn"></strong></span>
+                <input type="range" min="-5" max="12" step="0.1" data-field="stockReturn">
+              </label>
+              <label class="range-field">
+                <span class="range-top">債券年報酬 <strong class="range-value" data-output="bondReturn"></strong></span>
+                <input type="range" min="-3" max="8" step="0.1" data-field="bondReturn">
+              </label>
+              <label class="range-field">
+                <span class="range-top">現金年報酬 <strong class="range-value" data-output="cashReturn"></strong></span>
+                <input type="range" min="0" max="5" step="0.1" data-field="cashReturn">
+              </label>
+              <label class="range-field">
+                <span class="range-top">不動產年報酬 <strong class="range-value" data-output="realEstateReturn"></strong></span>
+                <input type="range" min="-5" max="10" step="0.1" data-field="realEstateReturn">
+              </label>
+            </div>
+          </section>
+
+          <section class="tool-section" aria-labelledby="allocation-title">
+            <div class="section-title">
+              <h2 id="allocation-title">新增投資配置</h2>
+              <span class="section-note">自動正規化</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                股票 %
+                <input type="number" min="0" max="100" step="1" data-field="contributionStocks">
+              </label>
+              <label>
+                債券 %
+                <input type="number" min="0" max="100" step="1" data-field="contributionBonds">
+              </label>
+              <label>
+                現金 %
+                <input type="number" min="0" max="100" step="1" data-field="contributionCash">
+              </label>
+              <label>
+                推演年限
+                <input type="number" min="5" max="80" step="1" data-field="projectionYears">
+              </label>
+            </div>
+          </section>
+
+          <div class="button-row">
+            <button class="primary-btn" type="button" id="resetButton">重設範例</button>
+            <button class="secondary-btn" type="button" id="exportButton">匯出 JSON</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <section class="output-panel" aria-label="結果區">
+      <div id="warningBox" class="warning-box"></div>
+
+      <section class="summary-strip" aria-label="摘要">
+        <article class="metric green">
+          <span class="metric-label">FIRE 目標</span>
+          <strong class="metric-value" id="fireNumber">--</strong>
+          <small id="fireNumberNote">以目前支出與提領率計算</small>
+        </article>
+        <article class="metric blue">
+          <span class="metric-label">投資資產達標</span>
+          <strong class="metric-value" id="portfolioFire">--</strong>
+          <small id="portfolioFireNote">尚未扣除債務限制</small>
+        </article>
+        <article class="metric orange">
+          <span class="metric-label">無債 FIRE</span>
+          <strong class="metric-value" id="debtFreeFire">--</strong>
+          <small id="debtFreeFireNote">資產達標且負債歸零</small>
+        </article>
+        <article class="metric red">
+          <span class="metric-label">目前儲蓄率</span>
+          <strong class="metric-value" id="savingsRate">--</strong>
+          <small id="cashFlowNote">收入扣除支出與貸款</small>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="workspace-card">
+          <div class="card-head">
+            <h2>年度推演</h2>
+            <div class="legend">
+              <span><i class="dot green"></i>可提領資產</span>
+              <span><i class="dot blue"></i>FIRE 目標</span>
+              <span><i class="dot orange"></i>剩餘負債</span>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="projectionChart" aria-label="資產與目標推演圖"></canvas>
+            <div id="chartTooltip" class="chart-tooltip" role="status" aria-live="polite"></div>
+          </div>
+        </article>
+
+        <article class="workspace-card">
+          <div class="card-head">
+            <h2>關鍵節點</h2>
+          </div>
+          <div class="timeline-list">
+            <div class="timeline-item">
+              <span class="timeline-bar" style="background: var(--green);"></span>
+              <div>
+                <div class="timeline-title">目前可提領資產</div>
+                <div class="timeline-copy">現金、股票、債券與其他可投資資產</div>
+              </div>
+              <strong class="timeline-value" id="eligibleAssets">--</strong>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-bar" style="background: var(--orange);"></span>
+              <div>
+                <div class="timeline-title">目前總負債</div>
+                <div class="timeline-copy">房貸與信貸剩餘本金</div>
+              </div>
+              <strong class="timeline-value" id="totalDebt">--</strong>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-bar" style="background: var(--blue);"></span>
+              <div>
+                <div class="timeline-title">目前淨資產</div>
+                <div class="timeline-copy">全部資產扣除負債</div>
+              </div>
+              <strong class="timeline-value" id="netWorth">--</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="workspace-card">
+          <div class="card-head">
+            <h2>情境比較</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>情境</th>
+                  <th>提領率</th>
+                  <th>投資資產達標</th>
+                  <th>無債 FIRE</th>
+                  <th>終值</th>
+                </tr>
+              </thead>
+              <tbody id="scenarioRows"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="workspace-card">
+          <div class="card-head">
+            <h2>目前資產配置</h2>
+          </div>
+          <div class="asset-bars" id="assetBars"></div>
+        </article>
+      </section>
+
+      <section class="workspace-card">
+        <div class="card-head">
+          <h2>敏感度</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>報酬調整</th>
+                <th>3.0% 提領</th>
+                <th>3.5% 提領</th>
+                <th>4.0% 提領</th>
+              </tr>
+            </thead>
+            <tbody id="sensitivityRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p class="disclaimer">此工具用於情境估算。報酬率、通膨與安全提領率都不是保證結果，稅務、保險、醫療、匯率與一次性支出需另行評估。</p>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULTS = {
+      currentAge: 40,
+      annualIncome: 1800000,
+      annualExpenses: 900000,
+      incomeGrowth: 2,
+      cash: 500000,
+      stocks: 3000000,
+      bonds: 1000000,
+      realEstate: 8000000,
+      otherAssets: 300000,
+      otherReturn: 3,
+      includeRealEstate: false,
+      mortgagePayment: 45000,
+      mortgageYears: 20,
+      mortgageApr: 2.2,
+      mortgageBalance: 8500000,
+      loanPayment: 15000,
+      loanYears: 3,
+      loanApr: 6,
+      loanBalance: 500000,
+      safeWithdrawalRate: 3.5,
+      inflationRate: 2,
+      stockReturn: 6,
+      bondReturn: 2.5,
+      cashReturn: 1,
+      realEstateReturn: 2,
+      contributionStocks: 70,
+      contributionBonds: 20,
+      contributionCash: 10,
+      projectionYears: 45
+    };
+
+    const fields = [...document.querySelectorAll("[data-field]")];
+    const percentOutputs = [...document.querySelectorAll("[data-output]")];
+    const form = document.getElementById("fireForm");
+    const warningBox = document.getElementById("warningBox");
+    const chart = document.getElementById("projectionChart");
+    const chartContext = chart.getContext("2d");
+    const chartTooltip = document.getElementById("chartTooltip");
+    const chartWrap = chart.closest(".chart-wrap");
+    let chartState = {
+      result: null,
+      points: [],
+      activeIndex: null,
+      padding: null,
+      width: 0,
+      height: 0
+    };
+
+    const moneyFormatter = new Intl.NumberFormat("zh-TW", {
+      style: "currency",
+      currency: "TWD",
+      maximumFractionDigits: 0
+    });
+
+    const numberFormatter = new Intl.NumberFormat("zh-TW", {
+      maximumFractionDigits: 1
+    });
+
+    function money(value) {
+      if (!Number.isFinite(value)) return "--";
+      const abs = Math.abs(value);
+      if (abs >= 100000000) return `${numberFormatter.format(value / 100000000)} 億`;
+      if (abs >= 10000) return `${numberFormatter.format(value / 10000)} 萬`;
+      return moneyFormatter.format(value);
+    }
+
+    function percent(value) {
+      if (!Number.isFinite(value)) return "--";
+      return `${numberFormatter.format(value)}%`;
+    }
+
+    function yearsLabel(years, age) {
+      if (!Number.isFinite(years)) return "未達標";
+      if (years <= 0) return `現在 / ${Math.round(age)} 歲`;
+      return `${numberFormatter.format(years)} 年 / ${Math.round(age + years)} 歲`;
+    }
+
+    function annualToMonthlyRate(ratePercent) {
+      return Math.pow(1 + ratePercent / 100, 1 / 12) - 1;
+    }
+
+    function estimatePrincipal(payment, years, apr) {
+      const months = Math.max(0, Math.round(years * 12));
+      if (payment <= 0 || months <= 0) return 0;
+      const monthlyRate = apr / 100 / 12;
+      if (monthlyRate === 0) return payment * months;
+      return payment * (1 - Math.pow(1 + monthlyRate, -months)) / monthlyRate;
+    }
+
+    function readInputs() {
+      const data = {};
+      fields.forEach((field) => {
+        const key = field.dataset.field;
+        if (field.type === "checkbox") {
+          data[key] = field.checked;
+        } else {
+          const parsed = Number(field.value);
+          data[key] = Number.isFinite(parsed) ? parsed : 0;
+        }
+      });
+      return data;
+    }
+
+    function setInputs(values) {
+      fields.forEach((field) => {
+        const key = field.dataset.field;
+        if (field.type === "checkbox") {
+          field.checked = Boolean(values[key]);
+        } else {
+          field.value = values[key] ?? 0;
+        }
+      });
+      syncRangeOutputs();
+    }
+
+    function syncRangeOutputs() {
+      percentOutputs.forEach((output) => {
+        const field = document.querySelector(`[data-field="${output.dataset.output}"]`);
+        output.textContent = percent(Number(field.value));
+      });
+    }
+
+    function normalizeAllocation(inputs) {
+      const rawStocks = Math.max(0, inputs.contributionStocks);
+      const rawBonds = Math.max(0, inputs.contributionBonds);
+      const rawCash = Math.max(0, inputs.contributionCash);
+      const total = rawStocks + rawBonds + rawCash;
+      if (total <= 0) {
+        return { stocks: 0.7, bonds: 0.2, cash: 0.1 };
+      }
+      return {
+        stocks: rawStocks / total,
+        bonds: rawBonds / total,
+        cash: rawCash / total
+      };
+    }
+
+    function getDebtState(payment, years, apr, balance) {
+      const estimated = estimatePrincipal(payment, years, apr);
+      return {
+        balance: balance > 0 ? balance : estimated,
+        payment: Math.max(0, payment),
+        apr: Math.max(0, apr),
+        monthsRemaining: Math.max(0, Math.round(years * 12)),
+        unpayable: false
+      };
+    }
+
+    function payDebt(debt) {
+      if (debt.balance <= 0 || debt.payment <= 0) {
+        debt.balance = Math.max(0, debt.balance);
+        return 0;
+      }
+      const interest = debt.balance * (debt.apr / 100 / 12);
+      if (debt.payment <= interest && debt.balance > 1) {
+        debt.balance += interest - debt.payment;
+        debt.unpayable = true;
+        return debt.payment;
+      }
+      const payment = Math.min(debt.payment, debt.balance + interest);
+      debt.balance = Math.max(0, debt.balance + interest - payment);
+      debt.monthsRemaining = Math.max(0, debt.monthsRemaining - 1);
+      return payment;
+    }
+
+    function simulate(baseInputs, overrides = {}) {
+      const inputs = { ...baseInputs, ...overrides };
+      const months = Math.max(1, Math.round(inputs.projectionYears * 12));
+      const allocation = normalizeAllocation(inputs);
+      const rates = {
+        cash: annualToMonthlyRate(inputs.cashReturn),
+        stocks: annualToMonthlyRate(inputs.stockReturn),
+        bonds: annualToMonthlyRate(inputs.bondReturn),
+        realEstate: annualToMonthlyRate(inputs.realEstateReturn),
+        other: annualToMonthlyRate(inputs.otherReturn)
+      };
+
+      const assets = {
+        cash: Math.max(0, inputs.cash),
+        stocks: Math.max(0, inputs.stocks),
+        bonds: Math.max(0, inputs.bonds),
+        realEstate: Math.max(0, inputs.realEstate),
+        other: Math.max(0, inputs.otherAssets)
+      };
+
+      const mortgage = getDebtState(inputs.mortgagePayment, inputs.mortgageYears, inputs.mortgageApr, inputs.mortgageBalance);
+      const loan = getDebtState(inputs.loanPayment, inputs.loanYears, inputs.loanApr, inputs.loanBalance);
+      const projection = [];
+      const warnings = [];
+      let portfolioFireYear = null;
+      let debtFreeFireYear = null;
+      let debtFreeYear = null;
+      let negativeCashFlowMonths = 0;
+      let annualInvestable = 0;
+      let annualDebtPayment = 0;
+
+      const initialEligible = assets.cash + assets.stocks + assets.bonds + assets.other + (inputs.includeRealEstate ? assets.realEstate : 0);
+      const initialDebt = mortgage.balance + loan.balance;
+      const initialNetWorth = assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other - initialDebt;
+      const initialFireNumber = inputs.annualExpenses / (inputs.safeWithdrawalRate / 100);
+      if (initialEligible >= initialFireNumber) portfolioFireYear = 0;
+      if (initialDebt <= 1 && initialEligible >= initialFireNumber) debtFreeFireYear = 0;
+      if (initialDebt <= 1) debtFreeYear = 0;
+
+      for (let month = 1; month <= months; month += 1) {
+        const elapsedYears = month / 12;
+        const fullYears = Math.floor((month - 1) / 12);
+        const incomeAnnual = inputs.annualIncome * Math.pow(1 + inputs.incomeGrowth / 100, fullYears);
+        const expensesAnnual = inputs.annualExpenses * Math.pow(1 + inputs.inflationRate / 100, fullYears);
+        const incomeMonthly = incomeAnnual / 12;
+        const expensesMonthly = expensesAnnual / 12;
+        const debtPayment = payDebt(mortgage) + payDebt(loan);
+        const investable = incomeMonthly - expensesMonthly - debtPayment;
+        annualInvestable += investable;
+        annualDebtPayment += debtPayment;
+
+        if (investable >= 0) {
+          assets.stocks += investable * allocation.stocks;
+          assets.bonds += investable * allocation.bonds;
+          assets.cash += investable * allocation.cash;
+        } else {
+          negativeCashFlowMonths += 1;
+          let need = Math.abs(investable);
+          const cashDraw = Math.min(assets.cash, need);
+          assets.cash -= cashDraw;
+          need -= cashDraw;
+          if (need > 0) {
+            const stockDraw = Math.min(assets.stocks, need);
+            assets.stocks -= stockDraw;
+            need -= stockDraw;
+          }
+          if (need > 0) {
+            const bondDraw = Math.min(assets.bonds, need);
+            assets.bonds -= bondDraw;
+          }
+        }
+
+        assets.cash *= 1 + rates.cash;
+        assets.stocks *= 1 + rates.stocks;
+        assets.bonds *= 1 + rates.bonds;
+        assets.realEstate *= 1 + rates.realEstate;
+        assets.other *= 1 + rates.other;
+
+        const debt = mortgage.balance + loan.balance;
+        const eligible = assets.cash + assets.stocks + assets.bonds + assets.other + (inputs.includeRealEstate ? assets.realEstate : 0);
+        const netWorth = assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other - debt;
+        const fireNumber = expensesAnnual / (inputs.safeWithdrawalRate / 100);
+
+        if (debt <= 1 && debtFreeYear === null) debtFreeYear = elapsedYears;
+        if (eligible >= fireNumber && portfolioFireYear === null) portfolioFireYear = elapsedYears;
+        if (eligible >= fireNumber && debt <= 1 && debtFreeFireYear === null) debtFreeFireYear = elapsedYears;
+
+        if (month % 12 === 0 || month === months) {
+          projection.push({
+            year: elapsedYears,
+            age: inputs.currentAge + elapsedYears,
+            incomeAnnual,
+            investableAnnual: annualInvestable,
+            debtPaymentAnnual: annualDebtPayment,
+            eligible,
+            debt,
+            netWorth,
+            fireNumber,
+            expensesAnnual,
+            totalAssets: assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other,
+            cash: assets.cash,
+            stocks: assets.stocks,
+            bonds: assets.bonds,
+            realEstate: assets.realEstate,
+            other: assets.other,
+            mortgageDebt: mortgage.balance,
+            loanDebt: loan.balance
+          });
+          annualInvestable = 0;
+          annualDebtPayment = 0;
+        }
+      }
+
+      if (negativeCashFlowMonths > 0) {
+        warnings.push(`有 ${negativeCashFlowMonths} 個月份現金流為負，模型會先動用現金，再動用投資資產。`);
+      }
+      if (mortgage.unpayable || loan.unpayable) {
+        warnings.push("至少一筆貸款月付低於當月利息，負債可能無法正常攤還。");
+      }
+      if (portfolioFireYear === null) {
+        warnings.push("在目前推演年限內，投資資產尚未達到 FIRE 目標。");
+      }
+
+      return {
+        inputs,
+        projection,
+        warnings,
+        portfolioFireYear,
+        debtFreeFireYear,
+        debtFreeYear,
+        initialEligible,
+        initialDebt,
+        initialNetWorth,
+        initialFireNumber,
+        ending: projection[projection.length - 1]
+      };
+    }
+
+    function drawChart(result, activeIndex = null) {
+      const rect = chart.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      const width = rect.width || 320;
+      const height = rect.height || 260;
+      chart.width = Math.floor(width * ratio);
+      chart.height = Math.floor(height * ratio);
+      chartContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      chartContext.clearRect(0, 0, width, height);
+      chartContext.fillStyle = "#ffffff";
+      chartContext.fillRect(0, 0, width, height);
+
+      const data = result.projection;
+      if (!data.length) {
+        chartState = { result, points: [], activeIndex: null, padding: null, width, height };
+        hideChartTooltip(false);
+        return;
+      }
+
+      const padding = { top: 24, right: 26, bottom: 38, left: 58 };
+      const plotWidth = width - padding.left - padding.right;
+      const plotHeight = height - padding.top - padding.bottom;
+      const maxYear = Math.max(1, data[data.length - 1].year);
+      const maxValue = Math.max(
+        ...data.flatMap((point) => [point.eligible, point.fireNumber, point.debt]),
+        1
+      ) * 1.12;
+
+      function x(year) {
+        return padding.left + (year / maxYear) * plotWidth;
+      }
+
+      function y(value) {
+        return padding.top + plotHeight - (value / maxValue) * plotHeight;
+      }
+
+      const resolvedActiveIndex = Number.isInteger(activeIndex) && activeIndex >= 0 && activeIndex < data.length
+        ? activeIndex
+        : null;
+      const points = data.map((point) => ({
+        point,
+        x: x(point.year),
+        eligibleY: y(point.eligible),
+        fireY: y(point.fireNumber),
+        debtY: y(point.debt)
+      }));
+      chartState = {
+        result,
+        points,
+        activeIndex: resolvedActiveIndex,
+        padding,
+        width,
+        height
+      };
+
+      chartContext.strokeStyle = "#e4e8e1";
+      chartContext.lineWidth = 1;
+      chartContext.fillStyle = "#7d867f";
+      chartContext.font = "12px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+      chartContext.textAlign = "right";
+      chartContext.textBaseline = "middle";
+
+      for (let i = 0; i <= 4; i += 1) {
+        const value = (maxValue / 4) * i;
+        const yy = y(value);
+        chartContext.beginPath();
+        chartContext.moveTo(padding.left, yy);
+        chartContext.lineTo(width - padding.right, yy);
+        chartContext.stroke();
+        chartContext.fillText(money(value), padding.left - 8, yy);
+      }
+
+      chartContext.textAlign = "center";
+      chartContext.textBaseline = "top";
+      for (let i = 0; i <= 4; i += 1) {
+        const year = (maxYear / 4) * i;
+        chartContext.fillText(`${Math.round(year)} 年`, x(year), height - padding.bottom + 13);
+      }
+
+      function drawLine(key, color) {
+        chartContext.strokeStyle = color;
+        chartContext.lineWidth = 3;
+        chartContext.lineJoin = "round";
+        chartContext.lineCap = "round";
+        chartContext.beginPath();
+        data.forEach((point, index) => {
+          const xx = x(point.year);
+          const yy = y(point[key]);
+          if (index === 0) chartContext.moveTo(xx, yy);
+          else chartContext.lineTo(xx, yy);
+        });
+        chartContext.stroke();
+      }
+
+      drawLine("eligible", "#217c63");
+      drawLine("fireNumber", "#2864a9");
+      drawLine("debt", "#b75c1d");
+
+      const firePoint = result.portfolioFireYear;
+      if (Number.isFinite(firePoint)) {
+        chartContext.strokeStyle = "rgba(33, 124, 99, 0.35)";
+        chartContext.lineWidth = 2;
+        chartContext.setLineDash([6, 5]);
+        chartContext.beginPath();
+        chartContext.moveTo(x(firePoint), padding.top);
+        chartContext.lineTo(x(firePoint), height - padding.bottom);
+        chartContext.stroke();
+        chartContext.setLineDash([]);
+      }
+
+      if (resolvedActiveIndex !== null) {
+        const marker = points[resolvedActiveIndex];
+        chartContext.strokeStyle = "rgba(27, 29, 28, 0.28)";
+        chartContext.lineWidth = 1;
+        chartContext.setLineDash([5, 5]);
+        chartContext.beginPath();
+        chartContext.moveTo(marker.x, padding.top);
+        chartContext.lineTo(marker.x, height - padding.bottom);
+        chartContext.stroke();
+        chartContext.setLineDash([]);
+
+        function drawDot(dotY, color) {
+          chartContext.beginPath();
+          chartContext.fillStyle = "#ffffff";
+          chartContext.strokeStyle = color;
+          chartContext.lineWidth = 3;
+          chartContext.arc(marker.x, dotY, 5, 0, Math.PI * 2);
+          chartContext.fill();
+          chartContext.stroke();
+        }
+
+        drawDot(marker.eligibleY, "#217c63");
+        drawDot(marker.fireY, "#2864a9");
+        drawDot(marker.debtY, "#b75c1d");
+      }
+    }
+
+    function tooltipRow(label, value) {
+      return `<div class="tooltip-row"><span>${label}</span><strong>${value}</strong></div>`;
+    }
+
+    function showChartTooltip(index) {
+      const marker = chartState.points[index];
+      if (!marker) return;
+
+      const detail = marker.point;
+      const gapToFire = detail.eligible - detail.fireNumber;
+      const gapLabel = gapToFire >= 0 ? "超過目標" : "距離目標";
+      const yearText = `第 ${Math.round(detail.year)} 年`;
+      const ageText = `${Math.round(detail.age)} 歲`;
+
+      chartTooltip.innerHTML = `
+        <div class="tooltip-title">${yearText} · ${ageText}</div>
+        <div class="tooltip-meta">年度資產試算詳情</div>
+        <div class="tooltip-grid">
+          ${tooltipRow("可提領資產", money(detail.eligible))}
+          ${tooltipRow("FIRE 目標", money(detail.fireNumber))}
+          ${tooltipRow(gapLabel, money(Math.abs(gapToFire)))}
+          ${tooltipRow("剩餘負債", money(detail.debt))}
+          ${tooltipRow("淨資產", money(detail.netWorth))}
+          <div class="tooltip-divider"></div>
+          ${tooltipRow("現金", money(detail.cash))}
+          ${tooltipRow("股票 / ETF", money(detail.stocks))}
+          ${tooltipRow("債券 / 定收", money(detail.bonds))}
+          ${tooltipRow("不動產", money(detail.realEstate))}
+          ${tooltipRow("其他資產", money(detail.other))}
+          <div class="tooltip-divider"></div>
+          ${tooltipRow("年度收入", money(detail.incomeAnnual))}
+          ${tooltipRow("年度支出", money(detail.expensesAnnual))}
+          ${tooltipRow("年度貸款支出", money(detail.debtPaymentAnnual))}
+          ${tooltipRow("年度可投入", money(detail.investableAnnual))}
+        </div>
+      `;
+
+      chartTooltip.classList.add("show");
+
+      const wrapWidth = chartWrap.clientWidth;
+      const wrapHeight = chartWrap.clientHeight;
+      const tooltipWidth = chartTooltip.offsetWidth;
+      const tooltipHeight = chartTooltip.offsetHeight;
+      const gap = 14;
+      let left = marker.x + gap;
+      if (left + tooltipWidth > wrapWidth - 10) {
+        left = marker.x - tooltipWidth - gap;
+      }
+      left = Math.max(10, Math.min(left, wrapWidth - tooltipWidth - 10));
+
+      const anchorY = Math.min(marker.eligibleY, marker.fireY, marker.debtY);
+      let top = anchorY - tooltipHeight / 2;
+      top = Math.max(10, Math.min(top, wrapHeight - tooltipHeight - 10));
+
+      chartTooltip.style.left = `${left}px`;
+      chartTooltip.style.top = `${top}px`;
+    }
+
+    function hideChartTooltip(redraw = true) {
+      chartTooltip.classList.remove("show");
+      if (chartState.activeIndex !== null && redraw && chartState.result) {
+        drawChart(chartState.result, null);
+      } else {
+        chartState.activeIndex = null;
+      }
+    }
+
+    function findNearestChartPoint(clientX, clientY) {
+      if (!chartState.points.length || !chartState.padding) return null;
+
+      const rect = chart.getBoundingClientRect();
+      const pointerX = clientX - rect.left;
+      const pointerY = clientY - rect.top;
+      const { padding, width, height, points } = chartState;
+      const plotRight = width - padding.right;
+      const plotBottom = height - padding.bottom;
+
+      if (
+        pointerX < padding.left ||
+        pointerX > plotRight ||
+        pointerY < padding.top ||
+        pointerY > plotBottom
+      ) {
+        return null;
+      }
+
+      let nearestIndex = 0;
+      let nearestDistance = Infinity;
+      points.forEach((point, index) => {
+        const distance = Math.abs(point.x - pointerX);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+      return nearestIndex;
+    }
+
+    function handleChartPointerMove(event) {
+      const nearestIndex = findNearestChartPoint(event.clientX, event.clientY);
+      if (nearestIndex === null) {
+        hideChartTooltip(true);
+        return;
+      }
+
+      if (chartState.activeIndex !== nearestIndex) {
+        drawChart(chartState.result, nearestIndex);
+      }
+      showChartTooltip(nearestIndex);
+    }
+
+    function renderAssetBars(inputs) {
+      const rows = [
+        ["現金", inputs.cash, "#217c63"],
+        ["股票 / ETF", inputs.stocks, "#2864a9"],
+        ["債券 / 定收", inputs.bonds, "#a88418"],
+        ["不動產", inputs.realEstate, "#b75c1d"],
+        ["其他可投資資產", inputs.otherAssets, "#7b5ea7"]
+      ];
+      const total = rows.reduce((sum, row) => sum + Math.max(0, row[1]), 0) || 1;
+      document.getElementById("assetBars").innerHTML = rows.map(([name, value, color]) => {
+        const share = Math.max(0, value) / total * 100;
+        return `
+          <div class="asset-row">
+            <div class="asset-top">
+              <span class="asset-name">${name}</span>
+              <span class="asset-amount">${money(value)} · ${numberFormatter.format(share)}%</span>
+            </div>
+            <div class="bar-track">
+              <span class="bar-fill" style="width: ${Math.max(2, share)}%; background: ${color};"></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderScenarios(inputs) {
+      const scenarios = [
+        {
+          name: "保守",
+          overrides: {
+            stockReturn: Math.max(-5, inputs.stockReturn - 2),
+            bondReturn: Math.max(-3, inputs.bondReturn - 1),
+            cashReturn: inputs.cashReturn,
+            realEstateReturn: inputs.realEstateReturn - 1,
+            safeWithdrawalRate: 3
+          }
+        },
+        { name: "目前假設", overrides: {} },
+        {
+          name: "樂觀",
+          overrides: {
+            stockReturn: Math.min(12, inputs.stockReturn + 2),
+            bondReturn: Math.min(8, inputs.bondReturn + 1),
+            cashReturn: inputs.cashReturn,
+            realEstateReturn: Math.min(10, inputs.realEstateReturn + 1),
+            safeWithdrawalRate: 4
+          }
+        }
+      ];
+
+      document.getElementById("scenarioRows").innerHTML = scenarios.map((scenario) => {
+        const result = simulate(inputs, scenario.overrides);
+        return `
+          <tr>
+            <td>${scenario.name}</td>
+            <td>${percent(result.inputs.safeWithdrawalRate)}</td>
+            <td>${yearsLabel(result.portfolioFireYear, inputs.currentAge)}</td>
+            <td>${yearsLabel(result.debtFreeFireYear, inputs.currentAge)}</td>
+            <td>${money(result.ending ? result.ending.netWorth : 0)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderSensitivity(inputs) {
+      const adjustments = [
+        ["-1%", -1],
+        ["目前", 0],
+        ["+1%", 1]
+      ];
+      const swrs = [3, 3.5, 4];
+      document.getElementById("sensitivityRows").innerHTML = adjustments.map(([label, adjustment]) => {
+        const cells = swrs.map((swr) => {
+          const result = simulate(inputs, {
+            safeWithdrawalRate: swr,
+            stockReturn: inputs.stockReturn + adjustment,
+            bondReturn: inputs.bondReturn + adjustment,
+            realEstateReturn: inputs.realEstateReturn + adjustment,
+            otherReturn: inputs.otherReturn + adjustment
+          });
+          return `<td>${yearsLabel(result.debtFreeFireYear, inputs.currentAge)}</td>`;
+        }).join("");
+        return `<tr><td>${label}</td>${cells}</tr>`;
+      }).join("");
+    }
+
+    function render() {
+      syncRangeOutputs();
+      const inputs = readInputs();
+      const result = simulate(inputs);
+      const mortgageForCashFlow = getDebtState(inputs.mortgagePayment, inputs.mortgageYears, inputs.mortgageApr, inputs.mortgageBalance);
+      const loanForCashFlow = getDebtState(inputs.loanPayment, inputs.loanYears, inputs.loanApr, inputs.loanBalance);
+      const annualDebtPayment = (mortgageForCashFlow.balance > 0 ? inputs.mortgagePayment : 0) * 12 +
+        (loanForCashFlow.balance > 0 ? inputs.loanPayment : 0) * 12;
+      const freeCashFlow = inputs.annualIncome - inputs.annualExpenses - annualDebtPayment;
+      const savingsRate = inputs.annualIncome > 0 ? freeCashFlow / inputs.annualIncome * 100 : 0;
+
+      document.getElementById("fireNumber").textContent = money(result.initialFireNumber);
+      document.getElementById("fireNumberNote").textContent = `${money(inputs.annualExpenses)} 年支出 / ${percent(inputs.safeWithdrawalRate)}`;
+      document.getElementById("portfolioFire").textContent = yearsLabel(result.portfolioFireYear, inputs.currentAge);
+      document.getElementById("portfolioFireNote").textContent = result.portfolioFireYear === null ? "目前推演年限內未達標" : "投資資產達標時間";
+      document.getElementById("debtFreeFire").textContent = yearsLabel(result.debtFreeFireYear, inputs.currentAge);
+      document.getElementById("debtFreeFireNote").textContent = result.debtFreeFireYear === null ? "需延長推演或調整現金流" : "資產達標且負債歸零";
+      document.getElementById("savingsRate").textContent = percent(savingsRate);
+      document.getElementById("cashFlowNote").textContent = `${money(freeCashFlow)} / 年可投入`;
+      document.getElementById("eligibleAssets").textContent = money(result.initialEligible);
+      document.getElementById("totalDebt").textContent = money(result.initialDebt);
+      document.getElementById("netWorth").textContent = money(result.initialNetWorth);
+
+      const warnings = [...result.warnings];
+      if (savingsRate < 0) warnings.unshift("目前年度現金流為負，FIRE 時間會高度依賴既有資產成長。");
+      if (inputs.includeRealEstate) warnings.push("已把不動產納入可提領資產；若是自住房，實際 FIRE 可用性通常需要另行折價或設定出租/出售情境。");
+      warningBox.textContent = warnings.join(" ");
+      warningBox.classList.toggle("show", warnings.length > 0);
+
+      drawChart(result);
+      hideChartTooltip(false);
+      renderAssetBars(inputs);
+      renderScenarios(inputs);
+      renderSensitivity(inputs);
+    }
+
+    function exportJson() {
+      const inputs = readInputs();
+      const result = simulate(inputs);
+      const payload = {
+        generatedAt: new Date().toISOString(),
+        inputs,
+        summary: {
+          fireNumber: result.initialFireNumber,
+          portfolioFireYear: result.portfolioFireYear,
+          debtFreeFireYear: result.debtFreeFireYear,
+          currentEligibleAssets: result.initialEligible,
+          currentDebt: result.initialDebt,
+          currentNetWorth: result.initialNetWorth
+        },
+        projection: result.projection
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "fire-calculator-scenario.json";
+      anchor.click();
+      URL.revokeObjectURL(url);
+    }
+
+    form.addEventListener("input", render);
+    chart.addEventListener("pointermove", handleChartPointerMove);
+    chart.addEventListener("pointerleave", () => hideChartTooltip(true));
+    chart.addEventListener("pointercancel", () => hideChartTooltip(true));
+    document.getElementById("resetButton").addEventListener("click", () => {
+      setInputs(DEFAULTS);
+      render();
+    });
+    document.getElementById("exportButton").addEventListener("click", exportJson);
+    window.addEventListener("resize", () => render());
+
+    setInputs(DEFAULTS);
+    render();
+  </script>
+</body>
+</html>
