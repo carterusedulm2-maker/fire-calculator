@@ -11,6 +11,7 @@ data to a server.
 - Cash, stock, bond, real estate, and other asset inputs
 - Mortgage and personal loan projection
 - FIRE target based on configurable withdrawal rate
+- Coast FIRE milestone based on target retirement age
 - Scenario and sensitivity tables
 - Interactive yearly chart tooltip
 - JSON export

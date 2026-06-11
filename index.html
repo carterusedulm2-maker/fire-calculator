@@ -262,7 +262,7 @@
       align-items: stretch;
       display: grid;
       gap: 14px;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 
     .metric {
@@ -311,6 +311,10 @@
 
     .metric.red {
       border-top: 4px solid var(--red);
+    }
+
+    .metric.yellow {
+      border-top: 4px solid var(--yellow);
     }
 
     .workspace-grid {
@@ -595,6 +599,12 @@
       padding: 0 2px 8px;
     }
 
+    @media (max-width: 1400px) {
+      .summary-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 1180px) {
       .summary-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -832,6 +842,10 @@
                 推演年限
                 <input type="number" min="5" max="80" step="1" data-field="projectionYears">
               </label>
+              <label>
+                Coast FIRE 退休年齡
+                <input type="number" min="30" max="90" step="1" data-field="coastRetirementAge">
+              </label>
             </div>
           </section>
 
@@ -861,6 +875,11 @@
           <span class="metric-label">無債 FIRE</span>
           <strong class="metric-value" id="debtFreeFire">--</strong>
           <small id="debtFreeFireNote">資產達標且負債歸零</small>
+        </article>
+        <article class="metric yellow">
+          <span class="metric-label">Coast FIRE</span>
+          <strong class="metric-value" id="coastFireStatus">--</strong>
+          <small id="coastFireNote">現有投資複利到退休年齡</small>
         </article>
         <article class="metric red">
           <span class="metric-label">目前儲蓄率</span>
@@ -1000,7 +1019,8 @@
       contributionStocks: 70,
       contributionBonds: 20,
       contributionCash: 10,
-      projectionYears: 45
+      projectionYears: 45,
+      coastRetirementAge: 65
     };
 
     const fields = [...document.querySelectorAll("[data-field]")];
@@ -1109,6 +1129,58 @@
       };
     }
 
+    function getEligibleAssetParts(inputs) {
+      const parts = [
+        { key: "cash", value: Math.max(0, inputs.cash), returnRate: inputs.cashReturn },
+        { key: "stocks", value: Math.max(0, inputs.stocks), returnRate: inputs.stockReturn },
+        { key: "bonds", value: Math.max(0, inputs.bonds), returnRate: inputs.bondReturn },
+        { key: "other", value: Math.max(0, inputs.otherAssets), returnRate: inputs.otherReturn }
+      ];
+      if (inputs.includeRealEstate) {
+        parts.push({ key: "realEstate", value: Math.max(0, inputs.realEstate), returnRate: inputs.realEstateReturn });
+      }
+      return parts;
+    }
+
+    function weightedCoastReturn(inputs) {
+      const parts = getEligibleAssetParts(inputs);
+      const total = parts.reduce((sum, part) => sum + part.value, 0);
+      if (total > 0) {
+        return parts.reduce((sum, part) => sum + part.value / total * part.returnRate, 0);
+      }
+
+      const allocation = normalizeAllocation(inputs);
+      return allocation.stocks * inputs.stockReturn +
+        allocation.bonds * inputs.bondReturn +
+        allocation.cash * inputs.cashReturn;
+    }
+
+    function coastNumberForAge(coastRetirementFireNumber, coastAnnualReturn, currentAge, targetAge) {
+      const yearsRemaining = Math.max(0, targetAge - currentAge);
+      return coastRetirementFireNumber / Math.pow(1 + coastAnnualReturn / 100, yearsRemaining);
+    }
+
+    function getCoastFireSetup(inputs, initialEligible) {
+      const targetAge = Math.max(inputs.currentAge, inputs.coastRetirementAge);
+      const yearsToTarget = Math.max(0, targetAge - inputs.currentAge);
+      const retirementExpenses = inputs.annualExpenses * Math.pow(1 + inputs.inflationRate / 100, yearsToTarget);
+      const retirementFireNumber = retirementExpenses / (inputs.safeWithdrawalRate / 100);
+      const annualReturn = weightedCoastReturn(inputs);
+      const coastNumber = coastNumberForAge(retirementFireNumber, annualReturn, inputs.currentAge, targetAge);
+      const projectedCurrentAssetsAtTarget = initialEligible * Math.pow(1 + annualReturn / 100, yearsToTarget);
+
+      return {
+        targetAge,
+        yearsToTarget,
+        retirementExpenses,
+        retirementFireNumber,
+        annualReturn,
+        coastNumber,
+        gap: initialEligible - coastNumber,
+        projectedCurrentAssetsAtTarget
+      };
+    }
+
     function getDebtState(payment, years, apr, balance) {
       const estimated = estimatePrincipal(payment, years, apr);
       return {
@@ -1164,6 +1236,7 @@
       let portfolioFireYear = null;
       let debtFreeFireYear = null;
       let debtFreeYear = null;
+      let coastFireYear = null;
       let negativeCashFlowMonths = 0;
       let annualInvestable = 0;
       let annualDebtPayment = 0;
@@ -1172,9 +1245,11 @@
       const initialDebt = mortgage.balance + loan.balance;
       const initialNetWorth = assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other - initialDebt;
       const initialFireNumber = inputs.annualExpenses / (inputs.safeWithdrawalRate / 100);
+      const coastSetup = getCoastFireSetup(inputs, initialEligible);
       if (initialEligible >= initialFireNumber) portfolioFireYear = 0;
       if (initialDebt <= 1 && initialEligible >= initialFireNumber) debtFreeFireYear = 0;
       if (initialDebt <= 1) debtFreeYear = 0;
+      if (initialEligible >= coastSetup.coastNumber) coastFireYear = 0;
 
       for (let month = 1; month <= months; month += 1) {
         const elapsedYears = month / 12;
@@ -1219,10 +1294,13 @@
         const eligible = assets.cash + assets.stocks + assets.bonds + assets.other + (inputs.includeRealEstate ? assets.realEstate : 0);
         const netWorth = assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other - debt;
         const fireNumber = expensesAnnual / (inputs.safeWithdrawalRate / 100);
+        const coastNumber = coastNumberForAge(coastSetup.retirementFireNumber, coastSetup.annualReturn, inputs.currentAge + elapsedYears, coastSetup.targetAge);
+        const coastGap = eligible - coastNumber;
 
         if (debt <= 1 && debtFreeYear === null) debtFreeYear = elapsedYears;
         if (eligible >= fireNumber && portfolioFireYear === null) portfolioFireYear = elapsedYears;
         if (eligible >= fireNumber && debt <= 1 && debtFreeFireYear === null) debtFreeFireYear = elapsedYears;
+        if (coastGap >= 0 && coastFireYear === null) coastFireYear = elapsedYears;
 
         if (month % 12 === 0 || month === months) {
           projection.push({
@@ -1235,6 +1313,8 @@
             debt,
             netWorth,
             fireNumber,
+            coastNumber,
+            coastGap,
             expensesAnnual,
             totalAssets: assets.cash + assets.stocks + assets.bonds + assets.realEstate + assets.other,
             cash: assets.cash,
@@ -1267,6 +1347,8 @@
         portfolioFireYear,
         debtFreeFireYear,
         debtFreeYear,
+        coastFireYear,
+        coastSetup,
         initialEligible,
         initialDebt,
         initialNetWorth,
@@ -1434,6 +1516,8 @@
           ${tooltipRow("可提領資產", money(detail.eligible))}
           ${tooltipRow("FIRE 目標", money(detail.fireNumber))}
           ${tooltipRow(gapLabel, money(Math.abs(gapToFire)))}
+          ${tooltipRow("Coast FIRE 門檻", money(detail.coastNumber))}
+          ${tooltipRow(detail.coastGap >= 0 ? "Coast 超過" : "Coast 還差", money(Math.abs(detail.coastGap)))}
           ${tooltipRow("剩餘負債", money(detail.debt))}
           ${tooltipRow("淨資產", money(detail.netWorth))}
           <div class="tooltip-divider"></div>
@@ -1627,6 +1711,12 @@
       document.getElementById("portfolioFireNote").textContent = result.portfolioFireYear === null ? "目前推演年限內未達標" : "投資資產達標時間";
       document.getElementById("debtFreeFire").textContent = yearsLabel(result.debtFreeFireYear, inputs.currentAge);
       document.getElementById("debtFreeFireNote").textContent = result.debtFreeFireYear === null ? "需延長推演或調整現金流" : "資產達標且負債歸零";
+      const coastGap = result.initialEligible - result.coastSetup.coastNumber;
+      const coastNote = coastGap >= 0
+        ? `門檻 ${money(result.coastSetup.coastNumber)} · ${Math.round(result.coastSetup.targetAge)} 歲預估 ${money(result.coastSetup.projectedCurrentAssetsAtTarget)}`
+        : `門檻 ${money(result.coastSetup.coastNumber)} · ${result.coastFireYear === null ? "推演期內未達標" : `${yearsLabel(result.coastFireYear, inputs.currentAge)} 達標`}`;
+      document.getElementById("coastFireStatus").textContent = coastGap >= 0 ? "已達標" : `差 ${money(Math.abs(coastGap))}`;
+      document.getElementById("coastFireNote").textContent = coastNote;
       document.getElementById("savingsRate").textContent = percent(savingsRate);
       document.getElementById("cashFlowNote").textContent = `${money(freeCashFlow)} / 年可投入`;
       document.getElementById("eligibleAssets").textContent = money(result.initialEligible);
@@ -1656,6 +1746,10 @@
           fireNumber: result.initialFireNumber,
           portfolioFireYear: result.portfolioFireYear,
           debtFreeFireYear: result.debtFreeFireYear,
+          coastFireYear: result.coastFireYear,
+          coastFireNumber: result.coastSetup.coastNumber,
+          coastRetirementAge: result.coastSetup.targetAge,
+          coastAnnualReturn: result.coastSetup.annualReturn,
           currentEligibleAssets: result.initialEligible,
           currentDebt: result.initialDebt,
           currentNetWorth: result.initialNetWorth
