@@ -262,7 +262,7 @@
       align-items: stretch;
       display: grid;
       gap: 14px;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
 
     .metric {
@@ -593,6 +593,184 @@
       display: block;
     }
 
+    .source-note {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 12px;
+    }
+
+    .conditional-field.is-hidden {
+      display: none;
+    }
+
+    .backtest-summary {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .backtest-stat {
+      background: var(--panel-soft);
+      border-right: 1px solid var(--line);
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .backtest-stat:last-child {
+      border-right: 0;
+    }
+
+    .backtest-stat span {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .backtest-stat strong {
+      font-size: 1.2rem;
+      font-weight: 900;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .backtest-stat small {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .historical-scenarios {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 14px;
+    }
+
+    .history-card {
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 11px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .history-card header {
+      align-items: flex-start;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .scenario-kicker {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .scenario-years {
+      display: block;
+      font-size: 1.12rem;
+      font-weight: 950;
+      line-height: 1.12;
+      margin-top: 3px;
+    }
+
+    .scenario-metrics {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .scenario-metric {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .scenario-metric span {
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 850;
+    }
+
+    .scenario-metric strong {
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .scenario-bars {
+      align-items: end;
+      display: grid;
+      gap: 3px;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(4px, 1fr);
+      height: 66px;
+      padding-top: 4px;
+    }
+
+    .scenario-bar {
+      align-items: stretch;
+      background: #edf2ee;
+      border-radius: 3px 3px 0 0;
+      display: flex;
+      flex-direction: column-reverse;
+      height: var(--bar-height, 0%);
+      min-height: 3px;
+      overflow: hidden;
+    }
+
+    .scenario-bar .life {
+      background: var(--green);
+      height: var(--life-share, 100%);
+    }
+
+    .scenario-bar .debt {
+      background: var(--orange);
+      height: var(--debt-share, 0%);
+    }
+
+    .scenario-footnote {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      display: inline-flex;
+      font-size: 0.76rem;
+      font-weight: 900;
+      justify-content: center;
+      min-width: 54px;
+      padding: 3px 8px;
+    }
+
+    .status-pill.success {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .status-pill.fail {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .status-pill.warn {
+      background: var(--orange-soft);
+      color: var(--orange);
+    }
+
     .disclaimer {
       color: var(--muted);
       font-size: 0.78rem;
@@ -608,6 +786,22 @@
     @media (max-width: 1180px) {
       .summary-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .backtest-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .historical-scenarios {
+        grid-template-columns: 1fr;
+      }
+
+      .backtest-stat:nth-child(2) {
+        border-right: 0;
+      }
+
+      .backtest-stat:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--line);
       }
 
       .workspace-grid {
@@ -645,8 +839,21 @@
 
       .field-grid,
       .summary-strip,
-      .button-row {
+      .button-row,
+      .backtest-summary,
+      .scenario-metrics {
         grid-template-columns: 1fr;
+      }
+
+      .backtest-stat,
+      .backtest-stat:nth-child(2),
+      .backtest-stat:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--line);
+        border-right: 0;
+      }
+
+      .backtest-stat:last-child {
+        border-bottom: 0;
       }
 
       .metric {
@@ -797,6 +1004,15 @@
                 <span class="range-top">安全提領率 <strong class="range-value" data-output="safeWithdrawalRate"></strong></span>
                 <input type="range" min="2.5" max="5" step="0.1" data-field="safeWithdrawalRate">
               </label>
+              <label>
+                退休提領策略
+                <select data-field="withdrawalStrategy">
+                  <option value="inflationAdjusted">通膨調整定額</option>
+                  <option value="vanguardDynamic">Vanguard 動態提領</option>
+                  <option value="guardrails">護欄提領</option>
+                  <option value="fixedPercent">固定比例提領</option>
+                </select>
+              </label>
               <label class="range-field">
                 <span class="range-top">通膨率 <strong class="range-value" data-output="inflationRate"></strong></span>
                 <input type="range" min="0" max="8" step="0.1" data-field="inflationRate">
@@ -847,6 +1063,51 @@
                 <input type="number" min="30" max="90" step="1" data-field="coastRetirementAge">
               </label>
             </div>
+          </section>
+
+          <section class="tool-section" aria-labelledby="backtest-settings-title">
+            <div class="section-title">
+              <h2 id="backtest-settings-title">退休回測</h2>
+              <span class="section-note">歷史序列</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                回測模式
+                <select data-field="backtestDebtMode">
+                  <option value="debtFree">無債 FIRE 回測</option>
+                  <option value="debtAtRetirement">帶債退休回測</option>
+                </select>
+              </label>
+              <label class="conditional-field" data-debt-mode-field="debtAtRetirement">
+                退休起始年（距今）
+                <input type="number" min="0" max="80" step="1" data-field="retirementStartYear">
+              </label>
+              <label>
+                提領年限
+                <input type="number" min="10" max="60" step="1" data-field="retirementYears">
+              </label>
+              <label>
+                回測起始資產
+                <input type="number" min="0" step="10000" placeholder="0 = FIRE 目標" data-field="backtestStartingAssets">
+              </label>
+              <label class="conditional-field" data-strategy-field="vanguardDynamic">
+                年度生活提領最多增加 %
+                <input type="number" min="0" max="20" step="0.1" data-field="vanguardCeiling">
+              </label>
+              <label class="conditional-field" data-strategy-field="vanguardDynamic">
+                年度生活提領最多減少 %
+                <input type="number" min="-80" max="0" step="0.1" data-field="vanguardFloor">
+              </label>
+              <label class="conditional-field" data-strategy-field="guardrails">
+                護欄觸發幅度 %
+                <input type="number" min="5" max="60" step="1" data-field="guardrailBand">
+              </label>
+              <label class="conditional-field" data-strategy-field="guardrails">
+                護欄調整幅度 %
+                <input type="number" min="1" max="30" step="1" data-field="guardrailAdjustment">
+              </label>
+            </div>
+            <p class="source-note" id="retirementModeNote">--</p>
           </section>
 
           <div class="button-row">
@@ -985,6 +1246,52 @@
         </div>
       </section>
 
+      <section class="workspace-card">
+        <div class="card-head">
+          <h2>退休提領回測</h2>
+          <span class="section-note" id="backtestSource">--</span>
+        </div>
+        <div class="backtest-summary">
+          <div class="backtest-stat">
+            <span id="backtestSuccessLabel">成功率</span>
+            <strong id="backtestSuccessRate">--</strong>
+            <small id="backtestRunCount">--</small>
+          </div>
+          <div class="backtest-stat">
+            <span>最差起始年</span>
+            <strong id="backtestWorstStart">--</strong>
+            <small id="backtestWorstNote">--</small>
+          </div>
+          <div class="backtest-stat">
+            <span>實質終值中位數</span>
+            <strong id="backtestMedianEnding">--</strong>
+            <small id="backtestInitialRate">--</small>
+          </div>
+          <div class="backtest-stat">
+            <span>最低實質終值</span>
+            <strong id="backtestWorstEnding">--</strong>
+            <small id="backtestStrategyNote">--</small>
+          </div>
+        </div>
+        <div class="historical-scenarios" id="historicalScenarioCards" aria-label="代表歷史區間"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>起始年</th>
+                <th>結果</th>
+                <th>首次失敗</th>
+                <th>最深跌幅</th>
+                <th>總提領</th>
+                <th>實質終值</th>
+              </tr>
+            </thead>
+            <tbody id="backtestRows"></tbody>
+          </table>
+        </div>
+        <p class="source-note" id="backtestNote">--</p>
+      </section>
+
       <p class="disclaimer">此工具用於情境估算。報酬率、通膨與安全提領率都不是保證結果，稅務、保險、醫療、匯率與一次性支出需另行評估。</p>
     </section>
   </main>
@@ -1010,8 +1317,13 @@
       loanYears: 3,
       loanApr: 6,
       loanBalance: 500000,
-      safeWithdrawalRate: 3.5,
-      inflationRate: 2,
+	      safeWithdrawalRate: 3.5,
+	      withdrawalStrategy: "inflationAdjusted",
+	      backtestDebtMode: "debtFree",
+	      retirementStartYear: 0,
+	      vanguardCeiling: 5,
+	      vanguardFloor: -2.5,
+	      inflationRate: 2,
       stockReturn: 6,
       bondReturn: 2.5,
       cashReturn: 1,
@@ -1020,7 +1332,118 @@
       contributionBonds: 20,
       contributionCash: 10,
       projectionYears: 45,
-      coastRetirementAge: 65
+      coastRetirementAge: 65,
+      retirementYears: 30,
+      backtestStartingAssets: 0,
+      guardrailBand: 20,
+      guardrailAdjustment: 10
+    };
+
+    const HISTORICAL_RETURNS = [
+      { year: 1928, stocks: 43.81, cash: 3.08, bonds: 0.84, inflation: -1.16 },
+      { year: 1929, stocks: -8.30, cash: 3.16, bonds: 4.20, inflation: 0.58 },
+      { year: 1930, stocks: -25.12, cash: 4.55, bonds: 4.54, inflation: -6.40 },
+      { year: 1931, stocks: -43.84, cash: 2.31, bonds: -2.56, inflation: -9.32 },
+      { year: 1932, stocks: -8.64, cash: 1.07, bonds: 8.79, inflation: -10.27 },
+      { year: 1933, stocks: 49.98, cash: 0.96, bonds: 1.86, inflation: 0.76 },
+      { year: 1934, stocks: -1.19, cash: 0.28, bonds: 7.96, inflation: 1.52 },
+      { year: 1935, stocks: 46.74, cash: 0.17, bonds: 4.47, inflation: 2.99 },
+      { year: 1936, stocks: 31.94, cash: 0.17, bonds: 5.02, inflation: 1.45 },
+      { year: 1937, stocks: -35.34, cash: 0.28, bonds: 1.38, inflation: 2.86 },
+      { year: 1938, stocks: 29.28, cash: 0.07, bonds: 4.21, inflation: -2.78 },
+      { year: 1939, stocks: -1.10, cash: 0.05, bonds: 4.41, inflation: 0.00 },
+      { year: 1940, stocks: -10.67, cash: 0.04, bonds: 5.40, inflation: 0.71 },
+      { year: 1941, stocks: -12.77, cash: 0.13, bonds: -2.02, inflation: 9.93 },
+      { year: 1942, stocks: 19.17, cash: 0.34, bonds: 2.29, inflation: 9.03 },
+      { year: 1943, stocks: 25.06, cash: 0.38, bonds: 2.49, inflation: 2.96 },
+      { year: 1944, stocks: 19.03, cash: 0.38, bonds: 2.58, inflation: 2.30 },
+      { year: 1945, stocks: 35.82, cash: 0.38, bonds: 3.80, inflation: 2.25 },
+      { year: 1946, stocks: -8.43, cash: 0.38, bonds: 3.13, inflation: 18.13 },
+      { year: 1947, stocks: 5.20, cash: 0.60, bonds: 0.92, inflation: 8.84 },
+      { year: 1948, stocks: 5.70, cash: 1.04, bonds: 1.95, inflation: 2.73 },
+      { year: 1949, stocks: 18.30, cash: 1.11, bonds: 4.66, inflation: -1.83 },
+      { year: 1950, stocks: 30.81, cash: 1.20, bonds: 0.43, inflation: 5.80 },
+      { year: 1951, stocks: 23.68, cash: 1.52, bonds: -0.30, inflation: 5.96 },
+      { year: 1952, stocks: 18.15, cash: 1.72, bonds: 2.27, inflation: 0.91 },
+      { year: 1953, stocks: -1.21, cash: 1.89, bonds: 4.14, inflation: 0.60 },
+      { year: 1954, stocks: 52.56, cash: 0.94, bonds: 3.29, inflation: -0.37 },
+      { year: 1955, stocks: 32.60, cash: 1.72, bonds: -1.34, inflation: 0.37 },
+      { year: 1956, stocks: 7.44, cash: 2.62, bonds: -2.26, inflation: 2.83 },
+      { year: 1957, stocks: -10.46, cash: 3.22, bonds: 6.80, inflation: 3.04 },
+      { year: 1958, stocks: 43.72, cash: 1.77, bonds: -2.10, inflation: 1.76 },
+      { year: 1959, stocks: 12.06, cash: 3.39, bonds: -2.65, inflation: 1.52 },
+      { year: 1960, stocks: 0.34, cash: 2.87, bonds: 11.64, inflation: 1.36 },
+      { year: 1961, stocks: 26.64, cash: 2.35, bonds: 2.06, inflation: 0.67 },
+      { year: 1962, stocks: -8.81, cash: 2.77, bonds: 5.69, inflation: 1.23 },
+      { year: 1963, stocks: 22.61, cash: 3.16, bonds: 1.68, inflation: 1.65 },
+      { year: 1964, stocks: 16.42, cash: 3.55, bonds: 3.73, inflation: 1.20 },
+      { year: 1965, stocks: 12.40, cash: 3.95, bonds: 0.72, inflation: 1.92 },
+      { year: 1966, stocks: -9.97, cash: 4.86, bonds: 2.91, inflation: 3.36 },
+      { year: 1967, stocks: 23.80, cash: 4.29, bonds: -1.58, inflation: 3.28 },
+      { year: 1968, stocks: 10.81, cash: 5.34, bonds: 3.27, inflation: 4.71 },
+      { year: 1969, stocks: -8.24, cash: 6.67, bonds: -5.01, inflation: 5.90 },
+      { year: 1970, stocks: 3.56, cash: 6.39, bonds: 16.75, inflation: 5.57 },
+      { year: 1971, stocks: 14.22, cash: 4.33, bonds: 9.79, inflation: 3.27 },
+      { year: 1972, stocks: 18.76, cash: 4.06, bonds: 2.82, inflation: 3.41 },
+      { year: 1973, stocks: -14.31, cash: 7.04, bonds: 3.66, inflation: 8.94 },
+      { year: 1974, stocks: -25.90, cash: 7.85, bonds: 1.99, inflation: 12.10 },
+      { year: 1975, stocks: 37.00, cash: 5.79, bonds: 3.61, inflation: 7.13 },
+      { year: 1976, stocks: 23.83, cash: 4.98, bonds: 15.98, inflation: 5.04 },
+      { year: 1977, stocks: -6.98, cash: 5.26, bonds: 1.29, inflation: 6.68 },
+      { year: 1978, stocks: 6.51, cash: 7.18, bonds: -0.78, inflation: 8.99 },
+      { year: 1979, stocks: 18.52, cash: 10.05, bonds: 0.67, inflation: 13.25 },
+      { year: 1980, stocks: 31.74, cash: 11.39, bonds: -2.99, inflation: 12.35 },
+      { year: 1981, stocks: -4.70, cash: 14.04, bonds: 8.20, inflation: 8.91 },
+      { year: 1982, stocks: 20.42, cash: 10.60, bonds: 32.81, inflation: 3.83 },
+      { year: 1983, stocks: 22.34, cash: 8.62, bonds: 3.20, inflation: 3.79 },
+      { year: 1984, stocks: 6.15, cash: 9.54, bonds: 13.73, inflation: 4.04 },
+      { year: 1985, stocks: 31.24, cash: 7.47, bonds: 25.71, inflation: 3.79 },
+      { year: 1986, stocks: 18.49, cash: 5.97, bonds: 24.28, inflation: 1.19 },
+      { year: 1987, stocks: 5.81, cash: 5.78, bonds: -4.96, inflation: 4.33 },
+      { year: 1988, stocks: 16.54, cash: 6.67, bonds: 8.22, inflation: 4.41 },
+      { year: 1989, stocks: 31.48, cash: 8.11, bonds: 17.69, inflation: 4.64 },
+      { year: 1990, stocks: -3.06, cash: 7.50, bonds: 6.24, inflation: 6.25 },
+      { year: 1991, stocks: 30.23, cash: 5.38, bonds: 15.00, inflation: 2.98 },
+      { year: 1992, stocks: 7.49, cash: 3.43, bonds: 9.36, inflation: 2.97 },
+      { year: 1993, stocks: 9.97, cash: 3.00, bonds: 14.21, inflation: 2.81 },
+      { year: 1994, stocks: 1.33, cash: 4.25, bonds: -8.04, inflation: 2.60 },
+      { year: 1995, stocks: 37.20, cash: 5.49, bonds: 23.48, inflation: 2.53 },
+      { year: 1996, stocks: 22.68, cash: 5.01, bonds: 1.43, inflation: 3.38 },
+      { year: 1997, stocks: 33.10, cash: 5.06, bonds: 9.94, inflation: 1.70 },
+      { year: 1998, stocks: 28.34, cash: 4.78, bonds: 14.92, inflation: 1.61 },
+      { year: 1999, stocks: 20.89, cash: 4.64, bonds: -8.25, inflation: 2.68 },
+      { year: 2000, stocks: -9.03, cash: 5.82, bonds: 16.66, inflation: 3.44 },
+      { year: 2001, stocks: -11.85, cash: 3.40, bonds: 5.57, inflation: 1.60 },
+      { year: 2002, stocks: -21.97, cash: 1.61, bonds: 15.12, inflation: 2.48 },
+      { year: 2003, stocks: 28.36, cash: 1.01, bonds: 0.38, inflation: 2.04 },
+      { year: 2004, stocks: 10.74, cash: 1.37, bonds: 4.49, inflation: 3.34 },
+      { year: 2005, stocks: 4.83, cash: 3.15, bonds: 2.87, inflation: 3.34 },
+      { year: 2006, stocks: 15.61, cash: 4.73, bonds: 1.96, inflation: 2.52 },
+      { year: 2007, stocks: 5.48, cash: 4.36, bonds: 10.21, inflation: 4.11 },
+      { year: 2008, stocks: -36.55, cash: 1.37, bonds: 20.10, inflation: -0.02 },
+      { year: 2009, stocks: 25.94, cash: 0.15, bonds: -11.12, inflation: 2.81 },
+      { year: 2010, stocks: 14.82, cash: 0.14, bonds: 8.46, inflation: 1.44 },
+      { year: 2011, stocks: 2.10, cash: 0.05, bonds: 16.04, inflation: 3.06 },
+      { year: 2012, stocks: 15.89, cash: 0.09, bonds: 2.97, inflation: 1.76 },
+      { year: 2013, stocks: 32.15, cash: 0.06, bonds: -9.10, inflation: 1.51 },
+      { year: 2014, stocks: 13.52, cash: 0.03, bonds: 10.75, inflation: 0.65 },
+      { year: 2015, stocks: 1.38, cash: 0.05, bonds: 1.28, inflation: 0.64 },
+      { year: 2016, stocks: 11.77, cash: 0.32, bonds: 0.69, inflation: 2.05 },
+      { year: 2017, stocks: 21.61, cash: 0.93, bonds: 2.80, inflation: 2.13 },
+      { year: 2018, stocks: -4.23, cash: 1.94, bonds: -0.02, inflation: 2.00 },
+      { year: 2019, stocks: 31.21, cash: 2.06, bonds: 9.64, inflation: 2.31 },
+      { year: 2020, stocks: 18.02, cash: 0.35, bonds: 11.33, inflation: 1.32 },
+      { year: 2021, stocks: 28.47, cash: 0.05, bonds: -4.42, inflation: 7.19 },
+      { year: 2022, stocks: -18.04, cash: 2.02, bonds: -17.83, inflation: 6.44 },
+      { year: 2023, stocks: 26.06, cash: 5.07, bonds: 3.88, inflation: 3.12 },
+      { year: 2024, stocks: 24.88, cash: 5.18, bonds: -1.64, inflation: 2.89 },
+      { year: 2025, stocks: 17.72, cash: 4.21, bonds: 7.80, inflation: 2.74 }
+    ];
+
+    const HISTORICAL_RETURN_SOURCE = {
+      name: "NYU Stern / Aswath Damodaran",
+      url: "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/data.html",
+      range: `${HISTORICAL_RETURNS[0].year}-${HISTORICAL_RETURNS[HISTORICAL_RETURNS.length - 1].year}`
     };
 
     const fields = [...document.querySelectorAll("[data-field]")];
@@ -1087,6 +1510,8 @@
         const key = field.dataset.field;
         if (field.type === "checkbox") {
           data[key] = field.checked;
+        } else if (field.tagName === "SELECT") {
+          data[key] = field.value;
         } else {
           const parsed = Number(field.value);
           data[key] = Number.isFinite(parsed) ? parsed : 0;
@@ -1111,6 +1536,15 @@
       percentOutputs.forEach((output) => {
         const field = document.querySelector(`[data-field="${output.dataset.output}"]`);
         output.textContent = percent(Number(field.value));
+      });
+    }
+
+    function updateConditionalFields(inputs) {
+      document.querySelectorAll("[data-strategy-field]").forEach((field) => {
+        field.classList.toggle("is-hidden", field.dataset.strategyField !== inputs.withdrawalStrategy);
+      });
+      document.querySelectorAll("[data-debt-mode-field]").forEach((field) => {
+        field.classList.toggle("is-hidden", field.dataset.debtModeField !== inputs.backtestDebtMode);
       });
     }
 
@@ -1321,10 +1755,12 @@
             stocks: assets.stocks,
             bonds: assets.bonds,
             realEstate: assets.realEstate,
-            other: assets.other,
-            mortgageDebt: mortgage.balance,
-            loanDebt: loan.balance
-          });
+	            other: assets.other,
+	            mortgageDebt: mortgage.balance,
+	            mortgageMonthsRemaining: mortgage.monthsRemaining,
+	            loanDebt: loan.balance,
+	            loanMonthsRemaining: loan.monthsRemaining
+	          });
           annualInvestable = 0;
           annualDebtPayment = 0;
         }
@@ -1354,6 +1790,500 @@
         initialNetWorth,
         initialFireNumber,
         ending: projection[projection.length - 1]
+      };
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function quantile(values, q) {
+      const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+      if (!sorted.length) return 0;
+      const position = (sorted.length - 1) * q;
+      const lower = Math.floor(position);
+      const upper = Math.ceil(position);
+      if (lower === upper) return sorted[lower];
+      const weight = position - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+
+    function withdrawalStrategyName(strategy) {
+      if (strategy === "fixedPercent") return "固定比例提領";
+      if (strategy === "guardrails") return "護欄提領";
+      if (strategy === "vanguardDynamic") return "Vanguard 動態提領";
+      return "通膨調整定額";
+    }
+
+    function backtestModeName(mode) {
+      return mode === "debtAtRetirement" ? "帶債退休回測" : "無債 FIRE 回測";
+    }
+
+    function backtestWindowStatus(window) {
+      if (window.success) {
+        return { className: "success", text: "撐過", failureText: "無" };
+      }
+      if (window.debtShortfallYear) {
+        return { className: "warn", text: "貸款短缺", failureText: `貸款 ${window.debtShortfallYear}` };
+      }
+      return { className: "fail", text: "生活失敗", failureText: `生活 ${window.failureYear}` };
+    }
+
+    function failureElapsedYears(window) {
+      const failureYear = window.debtShortfallYear || window.failureYear;
+      return failureYear ? failureYear - window.startYear : Infinity;
+    }
+
+    function roundedRank(value, unit = 1) {
+      const numericValue = Number.isFinite(value) ? value : 0;
+      return Math.round(numericValue / unit);
+    }
+
+    function compareRoundedAscending(a, b, unit = 1) {
+      return roundedRank(a, unit) - roundedRank(b, unit);
+    }
+
+    function compareRoundedDescending(a, b, unit = 1) {
+      return roundedRank(b, unit) - roundedRank(a, unit);
+    }
+
+    function compareHistoricalWindows(a, b) {
+      const aFailed = !a.success;
+      const bFailed = !b.success;
+      if (aFailed !== bFailed) return aFailed ? -1 : 1;
+
+      const aFailureElapsed = failureElapsedYears(a);
+      const bFailureElapsed = failureElapsedYears(b);
+      if (aFailureElapsed !== bFailureElapsed) return aFailureElapsed - bFailureElapsed;
+      if (aFailed && bFailed) {
+        const aDebtShortfall = Boolean(a.debtShortfallYear);
+        const bDebtShortfall = Boolean(b.debtShortfallYear);
+        if (aDebtShortfall !== bDebtShortfall) return aDebtShortfall ? -1 : 1;
+        return a.startYear - b.startYear;
+      }
+
+      const aMinLifestyle = a.minRealLifestyleWithdrawal ?? a.minLifestyleWithdrawal;
+      const bMinLifestyle = b.minRealLifestyleWithdrawal ?? b.minLifestyleWithdrawal;
+      const minLifestyleComparison = compareRoundedAscending(aMinLifestyle, bMinLifestyle);
+      if (minLifestyleComparison) return minLifestyleComparison;
+
+      const aMaxCut = a.maxRealLifestyleCut ?? a.maxLifestyleCut;
+      const bMaxCut = b.maxRealLifestyleCut ?? b.maxLifestyleCut;
+      const maxCutComparison = compareRoundedDescending(aMaxCut, bMaxCut, 0.01);
+      if (maxCutComparison) return maxCutComparison;
+
+      const aYearsBelow = a.yearsBelowInitialRealLifestyle ?? a.yearsBelowInitialLifestyle;
+      const bYearsBelow = b.yearsBelowInitialRealLifestyle ?? b.yearsBelowInitialLifestyle;
+      if (aYearsBelow !== bYearsBelow) {
+        return bYearsBelow - aYearsBelow;
+      }
+      const aEnding = a.endingPortfolioReal ?? a.endingPortfolio;
+      const bEnding = b.endingPortfolioReal ?? b.endingPortfolio;
+      const endingComparison = compareRoundedAscending(aEnding, bEnding);
+      if (endingComparison) return endingComparison;
+
+      const drawdownComparison = compareRoundedDescending(a.maxDrawdown, b.maxDrawdown, 0.01);
+      if (drawdownComparison) return drawdownComparison;
+
+      return a.startYear - b.startYear;
+    }
+
+    function representativeBacktestWindows(windows) {
+      const sorted = [...windows].sort(compareHistoricalWindows);
+      if (!sorted.length) return [];
+      const medianIndex = Math.floor((sorted.length - 1) / 2);
+      return [
+        { key: "worst", label: "最糟區間", window: sorted[0] },
+        { key: "median", label: "中位區間", window: sorted[medianIndex] },
+        { key: "best", label: "最好區間", window: sorted[sorted.length - 1] }
+      ];
+    }
+
+    function backtestAnnualReturn(row, allocation) {
+      return allocation.stocks * row.stocks +
+        allocation.bonds * row.bonds +
+        allocation.cash * row.cash;
+    }
+
+    function debtStateFromSnapshot(payment, apr, balance, monthsRemaining) {
+      return {
+        balance: Math.max(0, balance),
+        payment: Math.max(0, payment),
+        apr: Math.max(0, apr),
+        monthsRemaining: Math.max(0, Math.round(monthsRemaining || 0)),
+        unpayable: false
+      };
+    }
+
+    function currentDebtStates(inputs) {
+      return {
+        mortgage: getDebtState(inputs.mortgagePayment, inputs.mortgageYears, inputs.mortgageApr, inputs.mortgageBalance),
+        loan: getDebtState(inputs.loanPayment, inputs.loanYears, inputs.loanApr, inputs.loanBalance)
+      };
+    }
+
+    function annualBacktestDebtPayment(debts) {
+      if (!debts) return 0;
+      let paid = 0;
+      for (let month = 0; month < 12; month += 1) {
+        paid += payDebt(debts.mortgage) + payDebt(debts.loan);
+      }
+      return paid;
+    }
+
+    function findProjectionRowForYear(projection, targetYear) {
+      if (!projection.length || targetYear <= 0) return null;
+      return projection.reduce((best, row) => {
+        if (!best) return row;
+        return Math.abs(row.year - targetYear) < Math.abs(best.year - targetYear) ? row : best;
+      }, null);
+    }
+
+    function getVanguardLimits(inputs) {
+      const ceiling = Number(inputs.vanguardCeiling) / 100;
+      const floor = Number(inputs.vanguardFloor) / 100;
+      const valid = Number.isFinite(ceiling) &&
+        Number.isFinite(floor) &&
+        floor > -1 &&
+        floor <= 0 &&
+        ceiling >= 0 &&
+        ceiling >= floor;
+      return {
+        ceiling: valid ? ceiling : 0.05,
+        floor: valid ? floor : -0.025,
+        valid
+      };
+    }
+
+    function resolveBacktestSetup(inputs, result) {
+      const debtMode = inputs.backtestDebtMode === "debtAtRetirement" ? "debtAtRetirement" : "debtFree";
+      const manualStartingAssets = Math.max(0, inputs.backtestStartingAssets);
+      const warnings = [];
+      let retirementStartYear = 0;
+      let retirementRow = null;
+      let defaultStartingAssets = result.initialFireNumber;
+      let firstLifestyleWithdrawal = Math.max(0, inputs.annualExpenses);
+      let startingDebt = 0;
+      let createDebtState = () => null;
+
+      if (debtMode === "debtAtRetirement") {
+        const requestedYear = Math.max(0, Number(inputs.retirementStartYear) || 0);
+        const maxProjectionYear = result.projection.length ? result.projection[result.projection.length - 1].year : 0;
+        retirementStartYear = clamp(requestedYear, 0, maxProjectionYear);
+        if (requestedYear !== retirementStartYear) {
+          warnings.push(`退休起始年已限制在 ${numberFormatter.format(retirementStartYear)} 年內，避免超出目前推演範圍。`);
+        }
+
+        if (retirementStartYear > 0) {
+          retirementRow = findProjectionRowForYear(result.projection, retirementStartYear);
+          if (retirementRow) {
+            retirementStartYear = retirementRow.year;
+            firstLifestyleWithdrawal = Math.max(0, retirementRow.expensesAnnual);
+            startingDebt = Math.max(0, retirementRow.mortgageDebt) + Math.max(0, retirementRow.loanDebt);
+            defaultStartingAssets = Math.max(0, retirementRow.fireNumber) + startingDebt;
+            createDebtState = () => ({
+              mortgage: debtStateFromSnapshot(
+                inputs.mortgagePayment,
+                inputs.mortgageApr,
+                retirementRow.mortgageDebt,
+                retirementRow.mortgageMonthsRemaining
+              ),
+              loan: debtStateFromSnapshot(
+                inputs.loanPayment,
+                inputs.loanApr,
+                retirementRow.loanDebt,
+                retirementRow.loanMonthsRemaining
+              )
+            });
+          }
+        } else {
+          const debts = currentDebtStates(inputs);
+          startingDebt = debts.mortgage.balance + debts.loan.balance;
+          defaultStartingAssets = result.initialFireNumber + startingDebt;
+          createDebtState = () => currentDebtStates(inputs);
+        }
+
+        if (manualStartingAssets > 0) {
+          warnings.push("已手動覆寫回測起始資產；此數字可能未包含退休後償債準備。");
+        }
+        if (Number.isFinite(result.debtFreeYear) && retirementStartYear >= result.debtFreeYear) {
+          warnings.push("此設定下退休時已無債，帶債退休回測結果會接近無債 FIRE 回測。");
+        }
+      }
+
+	      const startingAssets = Math.max(1, manualStartingAssets > 0 ? manualStartingAssets : defaultStartingAssets);
+	      const lifestyleBaseAssets = Math.max(1, startingAssets - startingDebt);
+	      const firstWithdrawal = initialBacktestWithdrawal(inputs, startingAssets, firstLifestyleWithdrawal, lifestyleBaseAssets);
+	      const lifestyleRate = firstLifestyleWithdrawal / lifestyleBaseAssets;
+	      if (debtMode === "debtAtRetirement" && startingAssets <= startingDebt) {
+	        warnings.push("回測起始資產低於或等於退休起始貸款餘額，生活提領會高度受限。");
+	      }
+	      return {
+	        debtMode,
+	        modeName: backtestModeName(debtMode),
+        retirementStartYear,
+        retirementRow,
+        defaultStartingAssets,
+        startingAssets,
+	        startingDebt,
+	        lifestyleBaseAssets,
+	        firstWithdrawal,
+	        firstLifestyleWithdrawal,
+	        initialRate: inputs.withdrawalStrategy === "fixedPercent" && lifestyleBaseAssets > 0
+	          ? firstWithdrawal / lifestyleBaseAssets
+	          : lifestyleRate,
+	        lifestyleRate,
+	        manualStartingAssets: manualStartingAssets > 0,
+	        createDebtState,
+	        warnings
+      };
+    }
+
+    function initialBacktestWithdrawal(inputs, startingAssets, firstLifestyleWithdrawal, lifestyleBaseAssets) {
+      if (inputs.withdrawalStrategy === "fixedPercent") {
+        return Math.max(0, lifestyleBaseAssets) * Math.max(0, inputs.safeWithdrawalRate) / 100;
+      }
+      return Math.max(0, firstLifestyleWithdrawal);
+    }
+
+	    function nextBacktestWithdrawal(inputs, strategy, portfolio, remainingDebt, previousWithdrawal, previousInflation, initialRate, vanguardLimits) {
+	      const lifestylePortfolio = Math.max(0, portfolio - Math.max(0, remainingDebt));
+	      if (strategy === "fixedPercent") {
+	        return Math.max(0, lifestylePortfolio * Math.max(0, inputs.safeWithdrawalRate) / 100);
+	      }
+
+	      let withdrawal = previousWithdrawal * Math.max(0, 1 + previousInflation / 100);
+	      if (strategy === "vanguardDynamic" && lifestylePortfolio > 0 && initialRate > 0) {
+	        const candidate = lifestylePortfolio * initialRate;
+	        const lowerBound = withdrawal * (1 + vanguardLimits.floor);
+	        const upperBound = withdrawal * (1 + vanguardLimits.ceiling);
+	        return Math.max(0, clamp(candidate, lowerBound, upperBound));
+	      }
+	      if (strategy === "guardrails" && lifestylePortfolio > 0 && initialRate > 0) {
+	        const band = clamp(inputs.guardrailBand || 20, 1, 100) / 100;
+	        const adjustment = clamp(inputs.guardrailAdjustment || 10, 0, 80) / 100;
+	        const currentRate = withdrawal / lifestylePortfolio;
+        if (currentRate > initialRate * (1 + band)) {
+          withdrawal *= 1 - adjustment;
+        } else if (currentRate < initialRate * (1 - band)) {
+          withdrawal *= 1 + adjustment;
+        }
+      }
+      return Math.max(0, withdrawal);
+    }
+
+    function runHistoricalBacktest(inputs, result) {
+      const allocation = normalizeAllocation(inputs);
+      const requestedYears = clamp(Math.round(inputs.retirementYears || 30), 1, HISTORICAL_RETURNS.length);
+      const setup = resolveBacktestSetup(inputs, result);
+      const startingAssets = setup.startingAssets;
+      const strategy = inputs.withdrawalStrategy || "inflationAdjusted";
+      const firstWithdrawal = setup.firstWithdrawal;
+      const initialRate = setup.initialRate;
+      const vanguardLimits = getVanguardLimits(inputs);
+      const windows = [];
+      const lastStartIndex = HISTORICAL_RETURNS.length - requestedYears;
+
+      for (let startIndex = 0; startIndex <= lastStartIndex; startIndex += 1) {
+        let portfolio = startingAssets;
+        let withdrawal = firstWithdrawal;
+        const debts = setup.debtMode === "debtAtRetirement" ? setup.createDebtState() : null;
+        let failed = false;
+        let failureYear = null;
+        let debtShortfallYear = null;
+        let totalWithdrawal = 0;
+        let totalLifestyleWithdrawal = 0;
+        let totalDebtPayment = 0;
+        let peak = startingAssets;
+        let maxDrawdown = 0;
+        let worstAnnualReturn = Infinity;
+        let minLifestyleWithdrawal = Infinity;
+        let maxLifestyleCut = 0;
+        let yearsBelowInitialLifestyle = 0;
+        let previousLifestyleWithdrawal = null;
+        let minRealLifestyleWithdrawal = Infinity;
+        let maxRealLifestyleCut = 0;
+        let yearsBelowInitialRealLifestyle = 0;
+        let previousRealLifestyleWithdrawal = null;
+        let cumulativeInflation = 1;
+        let endingInflationFactor = 1;
+        const annualSeries = [];
+        const baselineLifestyleWithdrawal = Math.max(0, firstWithdrawal);
+        const baselineRealLifestyleWithdrawal = baselineLifestyleWithdrawal;
+        const startYear = HISTORICAL_RETURNS[startIndex].year;
+        const endYear = HISTORICAL_RETURNS[startIndex + requestedYears - 1].year;
+
+        const recordAnnual = (row, lifestylePaid, debtPaid, endingAfterReturn, annualReturn, failedReason) => {
+          const realLifestyleWithdrawal = cumulativeInflation > 0 ? lifestylePaid / cumulativeInflation : lifestylePaid;
+          const endOfYearInflationFactor = cumulativeInflation * Math.max(0, 1 + row.inflation / 100);
+          const endingPortfolioReal = endOfYearInflationFactor > 0
+            ? endingAfterReturn / endOfYearInflationFactor
+            : endingAfterReturn;
+          minLifestyleWithdrawal = Math.min(minLifestyleWithdrawal, lifestylePaid);
+          if (previousLifestyleWithdrawal !== null && previousLifestyleWithdrawal > 0) {
+            maxLifestyleCut = Math.max(
+              maxLifestyleCut,
+              (previousLifestyleWithdrawal - lifestylePaid) / previousLifestyleWithdrawal * 100
+            );
+          }
+          if (baselineLifestyleWithdrawal > 0 && lifestylePaid < baselineLifestyleWithdrawal) {
+            yearsBelowInitialLifestyle += 1;
+          }
+          previousLifestyleWithdrawal = lifestylePaid;
+          minRealLifestyleWithdrawal = Math.min(minRealLifestyleWithdrawal, realLifestyleWithdrawal);
+          if (previousRealLifestyleWithdrawal !== null && previousRealLifestyleWithdrawal > 0) {
+            maxRealLifestyleCut = Math.max(
+              maxRealLifestyleCut,
+              (previousRealLifestyleWithdrawal - realLifestyleWithdrawal) / previousRealLifestyleWithdrawal * 100
+            );
+          }
+          if (
+            baselineRealLifestyleWithdrawal > 0 &&
+            realLifestyleWithdrawal < baselineRealLifestyleWithdrawal - 0.01
+          ) {
+            yearsBelowInitialRealLifestyle += 1;
+          }
+          previousRealLifestyleWithdrawal = realLifestyleWithdrawal;
+          annualSeries.push({
+            year: row.year,
+            lifestyleWithdrawal: lifestylePaid,
+            realLifestyleWithdrawal,
+            debtPayment: debtPaid,
+            totalWithdrawal: lifestylePaid + debtPaid,
+            endingPortfolio: endingAfterReturn,
+            endingPortfolioReal,
+            annualReturn,
+            failedReason
+          });
+          endingInflationFactor = endOfYearInflationFactor;
+        };
+
+	        for (let offset = 0; offset < requestedYears; offset += 1) {
+	          const row = HISTORICAL_RETURNS[startIndex + offset];
+	          if (offset > 0) {
+	            const previousInflation = HISTORICAL_RETURNS[startIndex + offset - 1].inflation;
+	            cumulativeInflation *= Math.max(0, 1 + previousInflation / 100);
+	            const remainingDebt = debts ? debts.mortgage.balance + debts.loan.balance : 0;
+	            withdrawal = nextBacktestWithdrawal(
+	              inputs,
+	              strategy,
+	              portfolio,
+	              remainingDebt,
+	              withdrawal,
+              previousInflation,
+              initialRate,
+              vanguardLimits
+            );
+          }
+
+          const debtPayment = annualBacktestDebtPayment(debts);
+          if (debtPayment > portfolio) {
+            const paidDebt = portfolio;
+            totalDebtPayment += portfolio;
+            totalWithdrawal += portfolio;
+            portfolio = 0;
+            failed = true;
+            debtShortfallYear = row.year;
+            maxDrawdown = Math.max(maxDrawdown, peak > 0 ? 100 : 0);
+            recordAnnual(row, 0, paidDebt, portfolio, null, "debt");
+            break;
+          }
+          portfolio -= debtPayment;
+          totalDebtPayment += debtPayment;
+          totalWithdrawal += debtPayment;
+
+          if (withdrawal > portfolio) {
+            const lifestylePaid = portfolio;
+            totalLifestyleWithdrawal += portfolio;
+            totalWithdrawal += portfolio;
+            portfolio = 0;
+            failed = true;
+            failureYear = row.year;
+            maxDrawdown = Math.max(maxDrawdown, peak > 0 ? 100 : 0);
+            recordAnnual(row, lifestylePaid, debtPayment, portfolio, null, "lifestyle");
+            break;
+          }
+
+          portfolio -= withdrawal;
+          totalWithdrawal += withdrawal;
+          totalLifestyleWithdrawal += withdrawal;
+          const annualReturn = backtestAnnualReturn(row, allocation);
+          worstAnnualReturn = Math.min(worstAnnualReturn, annualReturn);
+          portfolio *= 1 + annualReturn / 100;
+          peak = Math.max(peak, portfolio);
+          maxDrawdown = Math.max(maxDrawdown, peak > 0 ? (peak - portfolio) / peak * 100 : 0);
+          recordAnnual(row, withdrawal, debtPayment, portfolio, annualReturn, null);
+        }
+
+        windows.push({
+          startYear,
+          endYear,
+          success: !failed,
+          failureYear,
+          debtShortfallYear,
+          endingPortfolio: portfolio,
+          endingPortfolioReal: endingInflationFactor > 0 ? portfolio / endingInflationFactor : portfolio,
+          endingDebt: debts ? debts.mortgage.balance + debts.loan.balance : 0,
+          totalWithdrawal,
+          totalLifestyleWithdrawal,
+          totalDebtPayment,
+          minLifestyleWithdrawal: Number.isFinite(minLifestyleWithdrawal) ? minLifestyleWithdrawal : 0,
+          maxLifestyleCut,
+          yearsBelowInitialLifestyle,
+          minRealLifestyleWithdrawal: Number.isFinite(minRealLifestyleWithdrawal) ? minRealLifestyleWithdrawal : 0,
+          maxRealLifestyleCut,
+          yearsBelowInitialRealLifestyle,
+          failureElapsedYears: failed ? failureElapsedYears({ startYear, failureYear, debtShortfallYear }) : null,
+          annualSeries,
+          maxDrawdown,
+          worstAnnualReturn: Number.isFinite(worstAnnualReturn) ? worstAnnualReturn : 0,
+          startingAssets
+        });
+      }
+
+      const rankedWindows = [...windows].sort(compareHistoricalWindows);
+      const endingValues = windows.map((window) => window.endingPortfolio);
+      const realEndingValues = windows.map((window) => window.endingPortfolioReal);
+      const successCount = windows.filter((window) => window.success).length;
+      const debtShortfallCount = windows.filter((window) => window.debtShortfallYear).length;
+      const lifestyleFailureCount = windows.filter((window) => !window.debtShortfallYear && window.failureYear).length;
+      const representativeWindows = representativeBacktestWindows(windows);
+      const warnings = [...setup.warnings];
+      if (strategy === "vanguardDynamic" && !vanguardLimits.valid) {
+        warnings.push("Vanguard 年度增減限制格式無效，已用 +5% / -2.5% 進行回測。");
+      }
+
+      return {
+        allocation,
+        requestedYears,
+        windows,
+        rankedWindows,
+        successCount,
+        debtShortfallCount,
+        lifestyleFailureCount,
+        representativeWindows,
+        successRate: windows.length ? successCount / windows.length * 100 : 0,
+        startingAssets,
+	        firstWithdrawal,
+	        firstLifestyleWithdrawal: setup.firstLifestyleWithdrawal,
+	        startingDebt: setup.startingDebt,
+	        lifestyleBaseAssets: setup.lifestyleBaseAssets,
+	        lifestyleRate: setup.lifestyleRate,
+	        initialRate,
+        debtMode: setup.debtMode,
+        modeName: setup.modeName,
+        retirementStartYear: setup.retirementStartYear,
+        defaultStartingAssets: setup.defaultStartingAssets,
+        manualStartingAssets: setup.manualStartingAssets,
+        warnings,
+        medianEnding: quantile(endingValues, 0.5),
+        medianRealEnding: quantile(realEndingValues, 0.5),
+        p10Ending: quantile(endingValues, 0.1),
+        p10RealEnding: quantile(realEndingValues, 0.1),
+        worstEnding: endingValues.length ? Math.min(...endingValues) : 0,
+        worstRealEnding: realEndingValues.length ? Math.min(...realEndingValues) : 0,
+        worstWindow: rankedWindows[0] || null,
+        strategy
       };
     }
 
@@ -1694,10 +2624,131 @@
       }).join("");
     }
 
-    function render() {
-      syncRangeOutputs();
-      const inputs = readInputs();
-      const result = simulate(inputs);
+    function renderScenarioBars(window) {
+      const series = window.annualSeries || [];
+      if (!series.length) return "";
+      const maxBars = 24;
+      const step = Math.max(1, Math.ceil(series.length / maxBars));
+      const sampled = series.filter((_, index) => index % step === 0);
+      const lastRecord = series[series.length - 1];
+      if (sampled[sampled.length - 1] !== lastRecord) sampled.push(lastRecord);
+      const maxTotal = Math.max(...series.map((record) => record.totalWithdrawal), 1);
+
+      return sampled.map((record) => {
+        const total = Math.max(0, record.totalWithdrawal);
+        const height = total > 0 ? Math.max(4, total / maxTotal * 100) : 3;
+        const lifeShare = total > 0 ? record.lifestyleWithdrawal / total * 100 : 0;
+        const debtShare = total > 0 ? record.debtPayment / total * 100 : 0;
+        const title = `${record.year}：生活 ${money(record.lifestyleWithdrawal)}，貸款 ${money(record.debtPayment)}`;
+        return `
+          <span class="scenario-bar" title="${title}" style="--bar-height:${height}%;--life-share:${lifeShare}%;--debt-share:${debtShare}%">
+            <span class="life"></span>
+            <span class="debt"></span>
+          </span>
+        `;
+      }).join("");
+    }
+
+    function renderHistoricalScenarioCards(backtest) {
+      const container = document.getElementById("historicalScenarioCards");
+      container.innerHTML = backtest.representativeWindows.map((scenario) => {
+        const window = scenario.window;
+        const status = backtestWindowStatus(window);
+        const debtText = backtest.debtMode === "debtAtRetirement"
+          ? ` · 貸款支付 ${money(window.totalDebtPayment)}`
+          : "";
+        return `
+          <article class="history-card">
+            <header>
+              <div>
+                <span class="scenario-kicker">${scenario.label}</span>
+                <strong class="scenario-years">${window.startYear}-${window.endYear}</strong>
+              </div>
+              <span class="status-pill ${status.className}">${status.text}</span>
+            </header>
+            <div class="scenario-metrics">
+              <div class="scenario-metric">
+                <span>實質期末資產</span>
+                <strong>${money(window.endingPortfolioReal)}</strong>
+              </div>
+              <div class="scenario-metric">
+                <span>最低實質提領</span>
+                <strong>${money(window.minRealLifestyleWithdrawal)}</strong>
+              </div>
+              <div class="scenario-metric">
+                <span>最大實質降幅</span>
+                <strong>${percent(window.maxRealLifestyleCut)}</strong>
+              </div>
+              <div class="scenario-metric">
+                <span>低於首年實質</span>
+                <strong>${numberFormatter.format(window.yearsBelowInitialRealLifestyle)} 年</strong>
+              </div>
+            </div>
+            <div class="scenario-bars" aria-label="${scenario.label}年度提領組成">
+              ${renderScenarioBars(window)}
+            </div>
+            <p class="scenario-footnote">綠=名目生活提領，橘=貸款支付；實質指標折回首年購買力，名目總提領 ${money(window.totalWithdrawal)}${debtText}。</p>
+          </article>
+        `;
+      }).join("");
+    }
+
+	    function renderBacktest(backtest) {
+	      const worstWindow = backtest.worstWindow;
+	      const successLabel = backtest.debtMode === "debtAtRetirement" ? "成功率（含償債）" : "成功率（無債 FIRE）";
+	      const failureSplit = backtest.debtMode === "debtAtRetirement"
+	        ? `貸款短缺 ${backtest.debtShortfallCount} 組 · 生活失敗 ${backtest.lifestyleFailureCount} 組`
+	        : `${backtest.successCount}/${backtest.windows.length} 組歷史序列`;
+	      document.getElementById("backtestSource").textContent =
+	        `${HISTORICAL_RETURN_SOURCE.range} · ${backtest.requestedYears} 年 · ${backtest.modeName}`;
+	      document.getElementById("backtestSuccessLabel").textContent = successLabel;
+	      document.getElementById("backtestSuccessRate").textContent = percent(backtest.successRate);
+	      document.getElementById("backtestRunCount").textContent =
+	        backtest.debtMode === "debtAtRetirement"
+	          ? `${backtest.successCount}/${backtest.windows.length} 組 · ${failureSplit}`
+	          : failureSplit;
+	      document.getElementById("backtestWorstStart").textContent = worstWindow ? `${worstWindow.startYear}` : "--";
+	      document.getElementById("backtestWorstNote").textContent = worstWindow
+	        ? (worstWindow.success
+	          ? `實質終值 ${money(worstWindow.endingPortfolioReal)}`
+	          : worstWindow.debtShortfallYear
+	            ? `${worstWindow.debtShortfallYear} 年貸款短缺`
+	            : `${worstWindow.failureYear} 年生活提領失敗`)
+	        : "--";
+	      document.getElementById("backtestMedianEnding").textContent = money(backtest.medianRealEnding);
+	      document.getElementById("backtestInitialRate").textContent =
+	        `初始提領 ${percent(backtest.initialRate * 100)} · ${money(backtest.firstWithdrawal)}`;
+	      document.getElementById("backtestWorstEnding").textContent = money(backtest.worstRealEnding);
+	      document.getElementById("backtestStrategyNote").textContent = withdrawalStrategyName(backtest.strategy);
+	      renderHistoricalScenarioCards(backtest);
+
+	      document.getElementById("backtestRows").innerHTML = backtest.rankedWindows.slice(0, 8).map((window) => {
+	        const status = backtestWindowStatus(window);
+	        return `
+	          <tr>
+	            <td>${window.startYear}-${window.endYear}</td>
+	            <td><span class="status-pill ${status.className}">${status.text}</span></td>
+	            <td>${status.failureText}</td>
+	            <td>${percent(window.maxDrawdown)}</td>
+	            <td>${money(window.totalWithdrawal)}</td>
+	            <td>${money(window.endingPortfolioReal)}</td>
+	          </tr>
+	        `;
+	      }).join("");
+
+	      const modeNote = backtest.debtMode === "debtAtRetirement"
+	        ? `帶債模式會先從投資組合支付貸款，再支付生活提領；起始資產預設為退休起始年的生活 FIRE 目標加當時貸款餘額。`
+	        : `無債模式假設退休回測開始時貸款已還清，貸款只影響累積期達標時間。`;
+	      document.getElementById("backtestNote").textContent =
+	        `${modeNote} 資料來源：${HISTORICAL_RETURN_SOURCE.name}。回測使用美國 S&P 500 含股息、3 個月國庫券、10 年期公債與 CPI 通膨年度資料；退休投資配置採「新增投資配置」的股票/債券/現金比例。`;
+	    }
+
+	    function render() {
+	      syncRangeOutputs();
+	      const inputs = readInputs();
+	      updateConditionalFields(inputs);
+	      const result = simulate(inputs);
+	      const backtest = runHistoricalBacktest(inputs, result);
       const mortgageForCashFlow = getDebtState(inputs.mortgagePayment, inputs.mortgageYears, inputs.mortgageApr, inputs.mortgageBalance);
       const loanForCashFlow = getDebtState(inputs.loanPayment, inputs.loanYears, inputs.loanApr, inputs.loanBalance);
       const annualDebtPayment = (mortgageForCashFlow.balance > 0 ? inputs.mortgagePayment : 0) * 12 +
@@ -1721,11 +2772,16 @@
       document.getElementById("cashFlowNote").textContent = `${money(freeCashFlow)} / 年可投入`;
       document.getElementById("eligibleAssets").textContent = money(result.initialEligible);
       document.getElementById("totalDebt").textContent = money(result.initialDebt);
-      document.getElementById("netWorth").textContent = money(result.initialNetWorth);
+	      document.getElementById("netWorth").textContent = money(result.initialNetWorth);
+	      document.getElementById("retirementModeNote").textContent = backtest.debtMode === "debtAtRetirement"
+	        ? `帶債模式：第 ${numberFormatter.format(backtest.retirementStartYear)} 年退休，預設起始資產 ${money(backtest.defaultStartingAssets)}，其中當時貸款餘額 ${money(backtest.startingDebt)}。`
+	        : `無債模式：退休回測假設貸款已還清，起始資產預設為 ${money(backtest.defaultStartingAssets)}。`;
 
-      const warnings = [...result.warnings];
-      if (savingsRate < 0) warnings.unshift("目前年度現金流為負，FIRE 時間會高度依賴既有資產成長。");
-      if (inputs.includeRealEstate) warnings.push("已把不動產納入可提領資產；若是自住房，實際 FIRE 可用性通常需要另行折價或設定出租/出售情境。");
+	      const warnings = [...result.warnings, ...backtest.warnings];
+	      if (savingsRate < 0) warnings.unshift("目前年度現金流為負，FIRE 時間會高度依賴既有資產成長。");
+	      if (inputs.includeRealEstate) warnings.push("已把不動產納入可提領資產；若是自住房，實際 FIRE 可用性通常需要另行折價或設定出租/出售情境。");
+	      if (inputs.withdrawalStrategy === "fixedPercent") warnings.push("固定比例提領會讓年度支出跟著資產波動，成功率不代表支出穩定。");
+	      if (inputs.withdrawalStrategy === "vanguardDynamic") warnings.push("Vanguard 動態提領只調整生活提領；帶債模式下貸款支付仍按名目金額優先支付。");
       warningBox.textContent = warnings.join(" ");
       warningBox.classList.toggle("show", warnings.length > 0);
 
@@ -1734,11 +2790,13 @@
       renderAssetBars(inputs);
       renderScenarios(inputs);
       renderSensitivity(inputs);
+      renderBacktest(backtest);
     }
 
     function exportJson() {
       const inputs = readInputs();
       const result = simulate(inputs);
+      const backtest = runHistoricalBacktest(inputs, result);
       const payload = {
         generatedAt: new Date().toISOString(),
         inputs,
@@ -1753,6 +2811,38 @@
           currentEligibleAssets: result.initialEligible,
           currentDebt: result.initialDebt,
           currentNetWorth: result.initialNetWorth
+        },
+	        backtest: {
+	          source: HISTORICAL_RETURN_SOURCE,
+	          strategy: withdrawalStrategyName(backtest.strategy),
+	          mode: backtest.debtMode,
+	          modeName: backtest.modeName,
+	          years: backtest.requestedYears,
+	          retirementStartYear: backtest.retirementStartYear,
+	          startingAssets: backtest.startingAssets,
+	          defaultStartingAssets: backtest.defaultStartingAssets,
+	          manualStartingAssets: backtest.manualStartingAssets,
+	          startingDebt: backtest.startingDebt,
+	          lifestyleBaseAssets: backtest.lifestyleBaseAssets,
+	          firstWithdrawal: backtest.firstWithdrawal,
+	          firstLifestyleWithdrawal: backtest.firstLifestyleWithdrawal,
+	          initialWithdrawalRate: backtest.initialRate,
+	          lifestyleWithdrawalRate: backtest.lifestyleRate,
+	          successRate: backtest.successRate,
+	          successCount: backtest.successCount,
+	          debtShortfallCount: backtest.debtShortfallCount,
+	          lifestyleFailureCount: backtest.lifestyleFailureCount,
+	          runCount: backtest.windows.length,
+          warnings: backtest.warnings,
+          medianEnding: backtest.medianEnding,
+          medianRealEnding: backtest.medianRealEnding,
+          p10Ending: backtest.p10Ending,
+          p10RealEnding: backtest.p10RealEnding,
+          worstEnding: backtest.worstEnding,
+          worstRealEnding: backtest.worstRealEnding,
+          worstWindow: backtest.worstWindow,
+          representativeWindows: backtest.representativeWindows,
+          windows: backtest.windows
         },
         projection: result.projection
       };
