@@ -151,6 +151,91 @@
       min-width: 0;
     }
 
+    .field-control {
+      color: #313633;
+      display: grid;
+      font-size: 0.78rem;
+      font-weight: 700;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field-label-row {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      min-width: 0;
+    }
+
+    .field-label-row label {
+      display: block;
+      min-width: 0;
+    }
+
+    .strategy-info-field {
+      position: relative;
+    }
+
+    .info-button {
+      align-items: center;
+      background: var(--green-soft);
+      border: 1px solid #c7e5d9;
+      border-radius: 50%;
+      color: var(--green);
+      cursor: pointer;
+      display: inline-flex;
+      flex: 0 0 auto;
+      font-size: 0.72rem;
+      font-weight: 950;
+      height: 22px;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
+      width: 22px;
+    }
+
+    .info-button:hover,
+    .info-button.is-open {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .info-popover {
+      background: rgb(255 255 255 / 98%);
+      border: 1px solid #cfd6cd;
+      border-radius: var(--radius);
+      box-shadow: 0 18px 42px rgb(30 35 32 / 18%);
+      color: #313633;
+      font-size: 0.78rem;
+      font-weight: 650;
+      line-height: 1.45;
+      max-width: calc(100vw - 44px);
+      padding: 12px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      width: 360px;
+      z-index: 12;
+    }
+
+    .strategy-help-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .strategy-help-list p {
+      margin: 0;
+    }
+
+    .strategy-help-list strong {
+      color: var(--ink);
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 950;
+      margin-bottom: 2px;
+    }
+
     input[type="number"],
     select {
       appearance: textfield;
@@ -868,6 +953,12 @@
         grid-column: 2;
       }
 
+      .info-popover {
+        left: 0;
+        right: auto;
+        width: min(100%, calc(100vw - 28px));
+      }
+
       canvas {
         height: 300px;
       }
@@ -1004,15 +1095,33 @@
                 <span class="range-top">安全提領率 <strong class="range-value" data-output="safeWithdrawalRate"></strong></span>
                 <input type="range" min="2.5" max="5" step="0.1" data-field="safeWithdrawalRate">
               </label>
-              <label>
-                退休提領策略
-                <select data-field="withdrawalStrategy">
+              <div class="field-control strategy-info-field">
+                <div class="field-label-row">
+                  <label for="withdrawalStrategySelect">退休提領策略</label>
+                  <button
+                    class="info-button"
+                    id="withdrawalStrategyInfoButton"
+                    type="button"
+                    aria-label="查看退休提領策略說明"
+                    aria-expanded="false"
+                    aria-controls="withdrawalStrategyInfoPopover"
+                  >i</button>
+                </div>
+                <select id="withdrawalStrategySelect" data-field="withdrawalStrategy">
                   <option value="inflationAdjusted">通膨調整定額</option>
                   <option value="vanguardDynamic">Vanguard 動態提領</option>
                   <option value="guardrails">護欄提領</option>
                   <option value="fixedPercent">固定比例提領</option>
                 </select>
-              </label>
+                <div class="info-popover" id="withdrawalStrategyInfoPopover" role="tooltip" hidden>
+                  <div class="strategy-help-list">
+                    <p><strong>通膨調整定額</strong>首年提領年度支出，之後每年跟 CPI 通膨調整，購買力最穩，但不會因市場下跌自動減支。</p>
+                    <p><strong>Vanguard 動態提領</strong>每年依投資組合重新估生活提領，並限制年度生活提領最多增加或減少；帶債模式下貸款仍固定優先支付。</p>
+                    <p><strong>護欄提領</strong>用目前提領率和初始提領率比較，超出護欄就降支出，低於護欄就加支出。</p>
+                    <p><strong>固定比例提領</strong>每年固定提領當年可支應生活資產的一定比例，資產不容易耗盡，但年度支出會跟市場大幅波動。</p>
+                  </div>
+                </div>
+              </div>
               <label class="range-field">
                 <span class="range-top">通膨率 <strong class="range-value" data-output="inflationRate"></strong></span>
                 <input type="range" min="0" max="8" step="0.1" data-field="inflationRate">
@@ -1454,6 +1563,9 @@
     const chartContext = chart.getContext("2d");
     const chartTooltip = document.getElementById("chartTooltip");
     const chartWrap = chart.closest(".chart-wrap");
+    const withdrawalStrategyInfoButton = document.getElementById("withdrawalStrategyInfoButton");
+    const withdrawalStrategyInfoPopover = document.getElementById("withdrawalStrategyInfoPopover");
+    const withdrawalStrategyInfoField = document.querySelector(".strategy-info-field");
     let chartState = {
       result: null,
       points: [],
@@ -1490,6 +1602,13 @@
       if (!Number.isFinite(years)) return "未達標";
       if (years <= 0) return `現在 / ${Math.round(age)} 歲`;
       return `${numberFormatter.format(years)} 年 / ${Math.round(age + years)} 歲`;
+    }
+
+    function setWithdrawalStrategyInfo(open) {
+      if (!withdrawalStrategyInfoButton || !withdrawalStrategyInfoPopover) return;
+      withdrawalStrategyInfoPopover.hidden = !open;
+      withdrawalStrategyInfoButton.classList.toggle("is-open", open);
+      withdrawalStrategyInfoButton.setAttribute("aria-expanded", open ? "true" : "false");
     }
 
     function annualToMonthlyRate(ratePercent) {
@@ -2864,6 +2983,45 @@
       render();
     });
     document.getElementById("exportButton").addEventListener("click", exportJson);
+    if (withdrawalStrategyInfoButton && withdrawalStrategyInfoPopover && withdrawalStrategyInfoField) {
+      let strategyInfoPointerType = "mouse";
+      withdrawalStrategyInfoButton.addEventListener("pointerdown", (event) => {
+        strategyInfoPointerType = event.pointerType || "mouse";
+      });
+      withdrawalStrategyInfoButton.addEventListener("mouseenter", () => setWithdrawalStrategyInfo(true));
+      withdrawalStrategyInfoField.addEventListener("mouseleave", () => setWithdrawalStrategyInfo(false));
+      withdrawalStrategyInfoButton.addEventListener("focus", () => setWithdrawalStrategyInfo(true));
+      withdrawalStrategyInfoButton.addEventListener("blur", () => {
+        window.setTimeout(() => {
+          if (!withdrawalStrategyInfoField.contains(document.activeElement)) {
+            setWithdrawalStrategyInfo(false);
+          }
+        }, 80);
+      });
+      withdrawalStrategyInfoButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (strategyInfoPointerType === "touch" || strategyInfoPointerType === "pen" || event.detail === 0) {
+          setWithdrawalStrategyInfo(withdrawalStrategyInfoPopover.hidden);
+        } else {
+          setWithdrawalStrategyInfo(true);
+        }
+      });
+      withdrawalStrategyInfoPopover.addEventListener("click", (event) => event.stopPropagation());
+      document.addEventListener("click", (event) => {
+        if (!withdrawalStrategyInfoField.contains(event.target)) {
+          setWithdrawalStrategyInfo(false);
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          setWithdrawalStrategyInfo(false);
+          if (document.activeElement === withdrawalStrategyInfoButton) {
+            withdrawalStrategyInfoButton.blur();
+          }
+        }
+      });
+    }
     window.addEventListener("resize", () => render());
 
     setInputs(DEFAULTS);
