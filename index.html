@@ -1220,13 +1220,20 @@
             </div>
             <div class="field-grid">
               <label>
-                回測模式
+                回測範圍
+                <select data-field="backtestScope">
+                  <option value="fromToday">從今天開始完整回測</option>
+                  <option value="retirementOnly">退休後提領壓力測試</option>
+                </select>
+              </label>
+              <label>
+                退休負債處理
                 <select data-field="backtestDebtMode">
                   <option value="debtFree">無債 FIRE 回測</option>
                   <option value="debtAtRetirement">帶債退休回測</option>
                 </select>
               </label>
-              <label class="conditional-field" data-debt-mode-field="debtAtRetirement">
+              <label class="conditional-field" data-scope-field="retirementOnly" data-debt-mode-field="debtAtRetirement">
                 退休起始年（距今）
                 <input type="number" min="0" max="80" step="1" data-field="retirementStartYear">
               </label>
@@ -1234,7 +1241,7 @@
                 提領年限
                 <input type="number" min="10" max="60" step="1" data-field="retirementYears">
               </label>
-              <label>
+              <label class="conditional-field" data-scope-field="retirementOnly">
                 回測起始資產
                 <input type="number" min="0" step="10000" placeholder="0 = FIRE 目標" data-field="backtestStartingAssets">
               </label>
@@ -1467,6 +1474,7 @@
       loanBalance: 500000,
 	      safeWithdrawalRate: 3.5,
 	      withdrawalStrategy: "inflationAdjusted",
+	      backtestScope: "fromToday",
 	      backtestDebtMode: "debtFree",
 	      retirementStartYear: 0,
 	      vanguardCeiling: 5,
@@ -1717,11 +1725,11 @@
     }
 
     function updateConditionalFields(inputs) {
-      document.querySelectorAll("[data-strategy-field]").forEach((field) => {
-        field.classList.toggle("is-hidden", field.dataset.strategyField !== inputs.withdrawalStrategy);
-      });
-      document.querySelectorAll("[data-debt-mode-field]").forEach((field) => {
-        field.classList.toggle("is-hidden", field.dataset.debtModeField !== inputs.backtestDebtMode);
+      document.querySelectorAll("[data-strategy-field], [data-debt-mode-field], [data-scope-field]").forEach((field) => {
+        const strategyMatches = !field.dataset.strategyField || field.dataset.strategyField === inputs.withdrawalStrategy;
+        const debtModeMatches = !field.dataset.debtModeField || field.dataset.debtModeField === inputs.backtestDebtMode;
+        const scopeMatches = !field.dataset.scopeField || field.dataset.scopeField === inputs.backtestScope;
+        field.classList.toggle("is-hidden", !(strategyMatches && debtModeMatches && scopeMatches));
       });
     }
 
@@ -1996,9 +2004,19 @@
       return mode === "debtAtRetirement" ? "帶債退休回測" : "無債 FIRE 回測";
     }
 
+    function backtestScopeName(scope) {
+      return scope === "fromToday" ? "從今天開始完整回測" : "退休後提領壓力測試";
+    }
+
     function backtestWindowStatus(window) {
       if (window.success) {
         return { className: "success", text: "撐過", failureText: "無" };
+      }
+      if (window.accumulationFailureYear) {
+        return { className: "fail", text: "累積失敗", failureText: `累積 ${window.accumulationFailureYear}` };
+      }
+      if (window.readinessFailureYear) {
+        return { className: "warn", text: "未達退休條件", failureText: `退休 ${window.readinessFailureYear}` };
       }
       if (window.debtShortfallYear) {
         return { className: "warn", text: "貸款短缺", failureText: `貸款 ${window.debtShortfallYear}` };
@@ -2006,8 +2024,21 @@
       return { className: "fail", text: "生活失敗", failureText: `生活 ${window.failureYear}` };
     }
 
+    function backtestWindowFailureNote(window) {
+      if (!window) return "--";
+      if (window.success) return `實質終值 ${money(window.endingPortfolioReal)}`;
+      if (window.accumulationFailureYear) return `${window.accumulationFailureYear} 年累積期資產耗盡`;
+      if (window.readinessFailureYear) return `${window.readinessFailureYear} 年退休仍未符合無債條件`;
+      if (window.debtShortfallYear) return `${window.debtShortfallYear} 年貸款短缺`;
+      if (window.failureYear) return `${window.failureYear} 年生活提領失敗`;
+      return "未通過";
+    }
+
     function failureElapsedYears(window) {
-      const failureYear = window.debtShortfallYear || window.failureYear;
+      const failureYear = window.accumulationFailureYear ||
+        window.readinessFailureYear ||
+        window.debtShortfallYear ||
+        window.failureYear;
       return failureYear ? failureYear - window.startYear : Infinity;
     }
 
@@ -2106,6 +2137,54 @@
         paid += payDebt(debts.mortgage) + payDebt(debts.loan);
       }
       return paid;
+    }
+
+    function currentAssetParts(inputs) {
+      return {
+        cash: Math.max(0, inputs.cash),
+        stocks: Math.max(0, inputs.stocks),
+        bonds: Math.max(0, inputs.bonds),
+        realEstate: Math.max(0, inputs.realEstate),
+        other: Math.max(0, inputs.otherAssets)
+      };
+    }
+
+    function eligibleHistoricalAssets(assets, inputs) {
+      return assets.cash +
+        assets.stocks +
+        assets.bonds +
+        assets.other +
+        (inputs.includeRealEstate ? assets.realEstate : 0);
+    }
+
+    function drawFromHistoricalAssets(assets, amount, inputs) {
+      let need = Math.max(0, amount);
+      ["cash", "stocks", "bonds", "other"].forEach((key) => {
+        if (need <= 0) return;
+        const draw = Math.min(assets[key], need);
+        assets[key] -= draw;
+        need -= draw;
+      });
+      if (need > 0 && inputs.includeRealEstate) {
+        const draw = Math.min(assets.realEstate, need);
+        assets.realEstate -= draw;
+        need -= draw;
+      }
+      return need;
+    }
+
+    function addInvestableToHistoricalAssets(assets, investable, allocation) {
+      assets.stocks += investable * allocation.stocks;
+      assets.bonds += investable * allocation.bonds;
+      assets.cash += investable * allocation.cash;
+    }
+
+    function applyHistoricalAssetReturns(assets, row, inputs) {
+      assets.cash *= Math.max(0, 1 + row.cash / 100);
+      assets.stocks *= Math.max(0, 1 + row.stocks / 100);
+      assets.bonds *= Math.max(0, 1 + row.bonds / 100);
+      assets.realEstate *= Math.max(0, 1 + inputs.realEstateReturn / 100);
+      assets.other *= Math.max(0, 1 + inputs.otherReturn / 100);
     }
 
     function findProjectionRowForYear(projection, targetYear) {
@@ -2249,7 +2328,7 @@
       return Math.max(0, withdrawal);
     }
 
-    function runHistoricalBacktest(inputs, result) {
+    function runRetirementOnlyHistoricalBacktest(inputs, result) {
       const allocation = normalizeAllocation(inputs);
       const requestedYears = clamp(Math.round(inputs.retirementYears || 30), 1, HISTORICAL_RETURNS.length);
       const setup = resolveBacktestSetup(inputs, result);
@@ -2422,6 +2501,8 @@
       const endingValues = windows.map((window) => window.endingPortfolio);
       const realEndingValues = windows.map((window) => window.endingPortfolioReal);
       const successCount = windows.filter((window) => window.success).length;
+      const accumulationFailureCount = windows.filter((window) => window.accumulationFailureYear).length;
+      const readinessFailureCount = windows.filter((window) => window.readinessFailureYear).length;
       const debtShortfallCount = windows.filter((window) => window.debtShortfallYear).length;
       const lifestyleFailureCount = windows.filter((window) => !window.debtShortfallYear && window.failureYear).length;
       const representativeWindows = representativeBacktestWindows(windows);
@@ -2432,10 +2513,16 @@
 
       return {
         allocation,
+        scope: "retirementOnly",
+        scopeName: backtestScopeName("retirementOnly"),
         requestedYears,
+        accumulationYears: 0,
+        totalYears: requestedYears,
         windows,
         rankedWindows,
         successCount,
+        accumulationFailureCount,
+        readinessFailureCount,
         debtShortfallCount,
         lifestyleFailureCount,
         representativeWindows,
@@ -2462,6 +2549,317 @@
         worstWindow: rankedWindows[0] || null,
         strategy
       };
+    }
+
+    function runFullPathHistoricalBacktest(inputs, result) {
+      const allocation = normalizeAllocation(inputs);
+      const requestedYears = clamp(Math.round(inputs.retirementYears || 30), 1, HISTORICAL_RETURNS.length);
+      const requestedAccumulationYears = Math.max(0, Math.round((inputs.coastRetirementAge || inputs.currentAge) - inputs.currentAge));
+      const maxAccumulationYears = Math.max(0, HISTORICAL_RETURNS.length - requestedYears);
+      const accumulationYears = Math.min(requestedAccumulationYears, maxAccumulationYears);
+      const totalYears = accumulationYears + requestedYears;
+      const debtMode = inputs.backtestDebtMode === "debtAtRetirement" ? "debtAtRetirement" : "debtFree";
+      const strategy = inputs.withdrawalStrategy || "inflationAdjusted";
+      const vanguardLimits = getVanguardLimits(inputs);
+      const warnings = [];
+      const windows = [];
+
+      if (requestedAccumulationYears !== accumulationYears) {
+        warnings.push(`完整回測需要 ${numberFormatter.format(requestedAccumulationYears + requestedYears)} 年歷史資料，已將累積期縮短為 ${numberFormatter.format(accumulationYears)} 年。`);
+      }
+      if (strategy === "vanguardDynamic" && !vanguardLimits.valid) {
+        warnings.push("Vanguard 年度增減限制格式無效，已用 +5% / -2.5% 進行回測。");
+      }
+
+      const lastStartIndex = HISTORICAL_RETURNS.length - totalYears;
+      for (let startIndex = 0; startIndex <= lastStartIndex; startIndex += 1) {
+        const assets = currentAssetParts(inputs);
+        const accumulationDebts = currentDebtStates(inputs);
+        const startYear = HISTORICAL_RETURNS[startIndex].year;
+        const endYear = HISTORICAL_RETURNS[startIndex + totalYears - 1].year;
+        const retirementStartIndex = startIndex + accumulationYears;
+        const retirementStartHistoricalYear = HISTORICAL_RETURNS[retirementStartIndex].year;
+        let incomeAnnual = Math.max(0, inputs.annualIncome);
+        let expensesAnnual = Math.max(0, inputs.annualExpenses);
+        let cumulativeInflation = 1;
+        let endingInflationFactor = 1;
+        let failed = false;
+        let accumulationFailureYear = null;
+        let readinessFailureYear = null;
+        let failureYear = null;
+        let debtShortfallYear = null;
+        let totalWithdrawal = 0;
+        let totalLifestyleWithdrawal = 0;
+        let totalDebtPayment = 0;
+        let peak = Math.max(eligibleHistoricalAssets(assets, inputs), 1);
+        let maxDrawdown = 0;
+        let worstAnnualReturn = Infinity;
+        let annualSeries = [];
+        let minLifestyleWithdrawal = Infinity;
+        let maxLifestyleCut = 0;
+        let yearsBelowInitialLifestyle = 0;
+        let previousLifestyleWithdrawal = null;
+        let minRealLifestyleWithdrawal = Infinity;
+        let maxRealLifestyleCut = 0;
+        let yearsBelowInitialRealLifestyle = 0;
+        let previousRealLifestyleWithdrawal = null;
+        let retirementStartingAssets = 0;
+        let retirementStartingDebt = 0;
+        let firstLifestyleWithdrawal = 0;
+        let firstWithdrawal = 0;
+        let lifestyleBaseAssets = 1;
+        let initialRate = 0;
+        let lifestyleRate = 0;
+        let portfolio = eligibleHistoricalAssets(assets, inputs);
+
+        for (let offset = 0; offset < accumulationYears; offset += 1) {
+          const row = HISTORICAL_RETURNS[startIndex + offset];
+          const debtPayment = annualBacktestDebtPayment(accumulationDebts);
+          const investable = incomeAnnual - expensesAnnual - debtPayment;
+          if (investable >= 0) {
+            addInvestableToHistoricalAssets(assets, investable, allocation);
+          } else {
+            const shortfall = drawFromHistoricalAssets(assets, Math.abs(investable), inputs);
+            if (shortfall > 1) {
+              failed = true;
+              accumulationFailureYear = row.year;
+              portfolio = eligibleHistoricalAssets(assets, inputs);
+              maxDrawdown = Math.max(maxDrawdown, peak > 0 ? 100 : 0);
+              break;
+            }
+          }
+
+          applyHistoricalAssetReturns(assets, row, inputs);
+          portfolio = eligibleHistoricalAssets(assets, inputs);
+          peak = Math.max(peak, portfolio);
+          maxDrawdown = Math.max(maxDrawdown, peak > 0 ? (peak - portfolio) / peak * 100 : 0);
+          cumulativeInflation *= Math.max(0, 1 + row.inflation / 100);
+          endingInflationFactor = cumulativeInflation;
+          incomeAnnual *= Math.max(0, 1 + inputs.incomeGrowth / 100);
+          expensesAnnual *= Math.max(0, 1 + row.inflation / 100);
+        }
+
+        if (!failed) {
+          portfolio = eligibleHistoricalAssets(assets, inputs);
+          retirementStartingAssets = portfolio;
+          retirementStartingDebt = accumulationDebts.mortgage.balance + accumulationDebts.loan.balance;
+          firstLifestyleWithdrawal = Math.max(0, expensesAnnual);
+          lifestyleBaseAssets = Math.max(1, retirementStartingAssets - retirementStartingDebt);
+          firstWithdrawal = initialBacktestWithdrawal(inputs, retirementStartingAssets, firstLifestyleWithdrawal, lifestyleBaseAssets);
+          lifestyleRate = firstLifestyleWithdrawal / lifestyleBaseAssets;
+          initialRate = inputs.withdrawalStrategy === "fixedPercent" && lifestyleBaseAssets > 0
+            ? firstWithdrawal / lifestyleBaseAssets
+            : lifestyleRate;
+
+          if (debtMode === "debtFree" && retirementStartingDebt > 1) {
+            failed = true;
+            readinessFailureYear = retirementStartHistoricalYear;
+          } else {
+            const debts = debtMode === "debtAtRetirement" ? accumulationDebts : null;
+            let withdrawal = firstWithdrawal;
+            const baselineLifestyleWithdrawal = Math.max(0, firstWithdrawal);
+            const baselineRealLifestyleWithdrawal = cumulativeInflation > 0
+              ? baselineLifestyleWithdrawal / cumulativeInflation
+              : baselineLifestyleWithdrawal;
+
+            const recordAnnual = (row, lifestylePaid, debtPaid, endingAfterReturn, annualReturn, failedReason) => {
+              const realLifestyleWithdrawal = cumulativeInflation > 0 ? lifestylePaid / cumulativeInflation : lifestylePaid;
+              const endOfYearInflationFactor = cumulativeInflation * Math.max(0, 1 + row.inflation / 100);
+              const endingPortfolioReal = endOfYearInflationFactor > 0
+                ? endingAfterReturn / endOfYearInflationFactor
+                : endingAfterReturn;
+              minLifestyleWithdrawal = Math.min(minLifestyleWithdrawal, lifestylePaid);
+              if (previousLifestyleWithdrawal !== null && previousLifestyleWithdrawal > 0) {
+                maxLifestyleCut = Math.max(
+                  maxLifestyleCut,
+                  (previousLifestyleWithdrawal - lifestylePaid) / previousLifestyleWithdrawal * 100
+                );
+              }
+              if (baselineLifestyleWithdrawal > 0 && lifestylePaid < baselineLifestyleWithdrawal) {
+                yearsBelowInitialLifestyle += 1;
+              }
+              previousLifestyleWithdrawal = lifestylePaid;
+              minRealLifestyleWithdrawal = Math.min(minRealLifestyleWithdrawal, realLifestyleWithdrawal);
+              if (previousRealLifestyleWithdrawal !== null && previousRealLifestyleWithdrawal > 0) {
+                maxRealLifestyleCut = Math.max(
+                  maxRealLifestyleCut,
+                  (previousRealLifestyleWithdrawal - realLifestyleWithdrawal) / previousRealLifestyleWithdrawal * 100
+                );
+              }
+              if (
+                baselineRealLifestyleWithdrawal > 0 &&
+                realLifestyleWithdrawal < baselineRealLifestyleWithdrawal - 0.01
+              ) {
+                yearsBelowInitialRealLifestyle += 1;
+              }
+              previousRealLifestyleWithdrawal = realLifestyleWithdrawal;
+              annualSeries.push({
+                year: row.year,
+                lifestyleWithdrawal: lifestylePaid,
+                realLifestyleWithdrawal,
+                debtPayment: debtPaid,
+                totalWithdrawal: lifestylePaid + debtPaid,
+                endingPortfolio: endingAfterReturn,
+                endingPortfolioReal,
+                annualReturn,
+                failedReason
+              });
+              endingInflationFactor = endOfYearInflationFactor;
+            };
+
+            for (let offset = 0; offset < requestedYears; offset += 1) {
+              const row = HISTORICAL_RETURNS[retirementStartIndex + offset];
+              if (offset > 0) {
+                const previousInflation = HISTORICAL_RETURNS[retirementStartIndex + offset - 1].inflation;
+                cumulativeInflation *= Math.max(0, 1 + previousInflation / 100);
+                const remainingDebt = debts ? debts.mortgage.balance + debts.loan.balance : 0;
+                withdrawal = nextBacktestWithdrawal(
+                  inputs,
+                  strategy,
+                  portfolio,
+                  remainingDebt,
+                  withdrawal,
+                  previousInflation,
+                  initialRate,
+                  vanguardLimits
+                );
+              }
+
+              const debtPayment = annualBacktestDebtPayment(debts);
+              if (debtPayment > portfolio) {
+                const paidDebt = portfolio;
+                totalDebtPayment += portfolio;
+                totalWithdrawal += portfolio;
+                portfolio = 0;
+                failed = true;
+                debtShortfallYear = row.year;
+                maxDrawdown = Math.max(maxDrawdown, peak > 0 ? 100 : 0);
+                recordAnnual(row, 0, paidDebt, portfolio, null, "debt");
+                break;
+              }
+              portfolio -= debtPayment;
+              totalDebtPayment += debtPayment;
+              totalWithdrawal += debtPayment;
+
+              if (withdrawal > portfolio) {
+                const lifestylePaid = portfolio;
+                totalLifestyleWithdrawal += portfolio;
+                totalWithdrawal += portfolio;
+                portfolio = 0;
+                failed = true;
+                failureYear = row.year;
+                maxDrawdown = Math.max(maxDrawdown, peak > 0 ? 100 : 0);
+                recordAnnual(row, lifestylePaid, debtPayment, portfolio, null, "lifestyle");
+                break;
+              }
+
+              portfolio -= withdrawal;
+              totalWithdrawal += withdrawal;
+              totalLifestyleWithdrawal += withdrawal;
+              const annualReturn = backtestAnnualReturn(row, allocation);
+              worstAnnualReturn = Math.min(worstAnnualReturn, annualReturn);
+              portfolio *= 1 + annualReturn / 100;
+              peak = Math.max(peak, portfolio);
+              maxDrawdown = Math.max(maxDrawdown, peak > 0 ? (peak - portfolio) / peak * 100 : 0);
+              recordAnnual(row, withdrawal, debtPayment, portfolio, annualReturn, null);
+            }
+          }
+        }
+
+        windows.push({
+          startYear,
+          endYear,
+          success: !failed,
+          accumulationFailureYear,
+          readinessFailureYear,
+          failureYear,
+          debtShortfallYear,
+          endingPortfolio: portfolio,
+          endingPortfolioReal: endingInflationFactor > 0 ? portfolio / endingInflationFactor : portfolio,
+          endingDebt: accumulationDebts.mortgage.balance + accumulationDebts.loan.balance,
+          totalWithdrawal,
+          totalLifestyleWithdrawal,
+          totalDebtPayment,
+          minLifestyleWithdrawal: Number.isFinite(minLifestyleWithdrawal) ? minLifestyleWithdrawal : 0,
+          maxLifestyleCut,
+          yearsBelowInitialLifestyle,
+          minRealLifestyleWithdrawal: Number.isFinite(minRealLifestyleWithdrawal) ? minRealLifestyleWithdrawal : 0,
+          maxRealLifestyleCut,
+          yearsBelowInitialRealLifestyle,
+          failureElapsedYears: failed ? failureElapsedYears({ startYear, accumulationFailureYear, readinessFailureYear, failureYear, debtShortfallYear }) : null,
+          annualSeries,
+          maxDrawdown,
+          worstAnnualReturn: Number.isFinite(worstAnnualReturn) ? worstAnnualReturn : 0,
+          startingAssets: retirementStartingAssets,
+          firstWithdrawal,
+          firstLifestyleWithdrawal,
+          initialRate,
+          lifestyleRate,
+          startingDebt: retirementStartingDebt,
+          lifestyleBaseAssets,
+          accumulationYears,
+          retirementStartHistoricalYear
+        });
+      }
+
+      const rankedWindows = [...windows].sort(compareHistoricalWindows);
+      const endingValues = windows.map((window) => window.endingPortfolio);
+      const realEndingValues = windows.map((window) => window.endingPortfolioReal);
+      const successCount = windows.filter((window) => window.success).length;
+      const accumulationFailureCount = windows.filter((window) => window.accumulationFailureYear).length;
+      const readinessFailureCount = windows.filter((window) => window.readinessFailureYear).length;
+      const debtShortfallCount = windows.filter((window) => window.debtShortfallYear).length;
+      const lifestyleFailureCount = windows.filter((window) => !window.accumulationFailureYear && !window.readinessFailureYear && !window.debtShortfallYear && window.failureYear).length;
+      const firstWithdrawals = windows.map((window) => window.firstWithdrawal);
+      const initialRates = windows.map((window) => window.initialRate * 100);
+      const startingAssetsValues = windows.map((window) => window.startingAssets);
+      const startingDebtValues = windows.map((window) => window.startingDebt);
+
+      return {
+        allocation,
+        scope: "fromToday",
+        scopeName: backtestScopeName("fromToday"),
+        requestedYears,
+        accumulationYears,
+        totalYears,
+        windows,
+        rankedWindows,
+        successCount,
+        accumulationFailureCount,
+        readinessFailureCount,
+        debtShortfallCount,
+        lifestyleFailureCount,
+        representativeWindows: representativeBacktestWindows(windows),
+        successRate: windows.length ? successCount / windows.length * 100 : 0,
+        startingAssets: quantile(startingAssetsValues, 0.5),
+        firstWithdrawal: quantile(firstWithdrawals, 0.5),
+        firstLifestyleWithdrawal: quantile(firstWithdrawals, 0.5),
+        startingDebt: quantile(startingDebtValues, 0.5),
+        lifestyleBaseAssets: Math.max(1, quantile(startingAssetsValues, 0.5) - quantile(startingDebtValues, 0.5)),
+        lifestyleRate: quantile(initialRates, 0.5) / 100,
+        initialRate: quantile(initialRates, 0.5) / 100,
+        debtMode,
+        modeName: backtestModeName(debtMode),
+        retirementStartYear: accumulationYears,
+        defaultStartingAssets: result.initialEligible,
+        manualStartingAssets: false,
+        warnings,
+        medianEnding: quantile(endingValues, 0.5),
+        medianRealEnding: quantile(realEndingValues, 0.5),
+        p10Ending: quantile(endingValues, 0.1),
+        p10RealEnding: quantile(realEndingValues, 0.1),
+        worstEnding: endingValues.length ? Math.min(...endingValues) : 0,
+        worstRealEnding: realEndingValues.length ? Math.min(...realEndingValues) : 0,
+        worstWindow: rankedWindows[0] || null,
+        strategy
+      };
+    }
+
+    function runHistoricalBacktest(inputs, result) {
+      if (inputs.backtestScope === "fromToday") {
+        return runFullPathHistoricalBacktest(inputs, result);
+      }
+      return runRetirementOnlyHistoricalBacktest(inputs, result);
     }
 
     function drawChart(result, activeIndex = null) {
@@ -2836,14 +3234,17 @@
 
     function scenarioSelectionReason(scenario, backtest) {
       const rankText = `第 ${scenario.rank}/${scenario.total} 名`;
+      const sequenceText = backtest.scope === "fromToday"
+        ? `${backtest.totalYears} 年序列（累積 ${backtest.accumulationYears} 年 + 提領 ${backtest.requestedYears} 年）`
+        : `${backtest.requestedYears} 年序列`;
       const rankingBasis = "排序先看是否提早失敗，再看最低實質生活提領、最大實質降幅、低於首年年數與實質期末資產。";
       if (scenario.key === "worst") {
-        return `${rankText}，代表這組輸入下最嚴苛的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+        return `${rankText}，代表這組輸入下最嚴苛的真實 ${sequenceText}。${rankingBasis}`;
       }
       if (scenario.key === "best") {
-        return `${rankText}，代表這組輸入下對提領最友善的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+        return `${rankText}，代表這組輸入下對提領最友善的真實 ${sequenceText}。${rankingBasis}`;
       }
-      return `${rankText}，不是平均報酬路徑，而是排序落在中間的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+      return `${rankText}，不是平均報酬路徑，而是排序落在中間的真實 ${sequenceText}。${rankingBasis}`;
     }
 
     function renderHistoricalEvents(window) {
@@ -2905,29 +3306,32 @@
 
 	    function renderBacktest(backtest) {
 	      const worstWindow = backtest.worstWindow;
-	      const successLabel = backtest.debtMode === "debtAtRetirement" ? "成功率（含償債）" : "成功率（無債 FIRE）";
-	      const failureSplit = backtest.debtMode === "debtAtRetirement"
-	        ? `貸款短缺 ${backtest.debtShortfallCount} 組 · 生活失敗 ${backtest.lifestyleFailureCount} 組`
-	        : `${backtest.successCount}/${backtest.windows.length} 組歷史序列`;
+	      const isFullPath = backtest.scope === "fromToday";
+	      const successLabel = isFullPath
+	        ? "完整 FIRE 成功率"
+	        : (backtest.debtMode === "debtAtRetirement" ? "成功率（含償債）" : "成功率（無債 FIRE）");
+	      const failureSplit = isFullPath
+	        ? `累積失敗 ${backtest.accumulationFailureCount} 組 · 退休未達 ${backtest.readinessFailureCount} 組 · 貸款短缺 ${backtest.debtShortfallCount} 組 · 生活失敗 ${backtest.lifestyleFailureCount} 組`
+	        : (backtest.debtMode === "debtAtRetirement"
+	          ? `貸款短缺 ${backtest.debtShortfallCount} 組 · 生活失敗 ${backtest.lifestyleFailureCount} 組`
+	          : `${backtest.successCount}/${backtest.windows.length} 組歷史序列`);
 	      document.getElementById("backtestSource").textContent =
-	        `${HISTORICAL_RETURN_SOURCE.range} · ${backtest.requestedYears} 年 · ${backtest.modeName}`;
+	        isFullPath
+	          ? `${HISTORICAL_RETURN_SOURCE.range} · 累積 ${backtest.accumulationYears} 年 + 提領 ${backtest.requestedYears} 年 · ${backtest.scopeName} · ${backtest.modeName}`
+	          : `${HISTORICAL_RETURN_SOURCE.range} · ${backtest.requestedYears} 年 · ${backtest.scopeName} · ${backtest.modeName}`;
 	      document.getElementById("backtestSuccessLabel").textContent = successLabel;
 	      document.getElementById("backtestSuccessRate").textContent = percent(backtest.successRate);
 	      document.getElementById("backtestRunCount").textContent =
-	        backtest.debtMode === "debtAtRetirement"
+	        isFullPath || backtest.debtMode === "debtAtRetirement"
 	          ? `${backtest.successCount}/${backtest.windows.length} 組 · ${failureSplit}`
 	          : failureSplit;
 	      document.getElementById("backtestWorstStart").textContent = worstWindow ? `${worstWindow.startYear}` : "--";
-	      document.getElementById("backtestWorstNote").textContent = worstWindow
-	        ? (worstWindow.success
-	          ? `實質終值 ${money(worstWindow.endingPortfolioReal)}`
-	          : worstWindow.debtShortfallYear
-	            ? `${worstWindow.debtShortfallYear} 年貸款短缺`
-	            : `${worstWindow.failureYear} 年生活提領失敗`)
-	        : "--";
+	      document.getElementById("backtestWorstNote").textContent = backtestWindowFailureNote(worstWindow);
 	      document.getElementById("backtestMedianEnding").textContent = money(backtest.medianRealEnding);
 	      document.getElementById("backtestInitialRate").textContent =
-	        `初始提領 ${percent(backtest.initialRate * 100)} · ${money(backtest.firstWithdrawal)}`;
+	        isFullPath
+	          ? `退休首年提領中位數 ${percent(backtest.initialRate * 100)} · ${money(backtest.firstWithdrawal)}`
+	          : `初始提領 ${percent(backtest.initialRate * 100)} · ${money(backtest.firstWithdrawal)}`;
 	      document.getElementById("backtestWorstEnding").textContent = money(backtest.worstRealEnding);
 	      document.getElementById("backtestStrategyNote").textContent = withdrawalStrategyName(backtest.strategy);
 	      renderHistoricalScenarioCards(backtest);
@@ -2946,9 +3350,11 @@
 	        `;
 	      }).join("");
 
-	      const modeNote = backtest.debtMode === "debtAtRetirement"
-	        ? `帶債模式會先從投資組合支付貸款，再支付生活提領；起始資產預設為退休起始年的生活 FIRE 目標加當時貸款餘額。`
-	        : `無債模式假設退休回測開始時貸款已還清，貸款只影響累積期達標時間。`;
+	      const modeNote = isFullPath
+	        ? `完整回測會從目前資產、所得、支出與負債開始，先跑累積期，再於預計退休年齡切換成退休提領；若選無債 FIRE，退休時仍有債會判定未達退休條件。`
+	        : (backtest.debtMode === "debtAtRetirement"
+	          ? `帶債模式會先從投資組合支付貸款，再支付生活提領；起始資產預設為退休起始年的生活 FIRE 目標加當時貸款餘額。`
+	          : `無債模式假設退休回測開始時貸款已還清，貸款只影響累積期達標時間。`);
 	      document.getElementById("backtestNote").textContent =
 	        `${modeNote} 資料來源：${HISTORICAL_RETURN_SOURCE.name}。回測使用美國 S&P 500 含股息、3 個月國庫券、10 年期公債與 CPI 通膨年度資料；退休投資配置採「新增投資配置」的股票/債券/現金比例。`;
 	    }
@@ -2983,9 +3389,11 @@
       document.getElementById("eligibleAssets").textContent = money(result.initialEligible);
       document.getElementById("totalDebt").textContent = money(result.initialDebt);
 	      document.getElementById("netWorth").textContent = money(result.initialNetWorth);
-	      document.getElementById("retirementModeNote").textContent = backtest.debtMode === "debtAtRetirement"
-	        ? `帶債模式：第 ${numberFormatter.format(backtest.retirementStartYear)} 年退休，預設起始資產 ${money(backtest.defaultStartingAssets)}，其中當時貸款餘額 ${money(backtest.startingDebt)}。`
-	        : `無債模式：退休回測假設貸款已還清，起始資產預設為 ${money(backtest.defaultStartingAssets)}。`;
+	      document.getElementById("retirementModeNote").textContent = backtest.scope === "fromToday"
+	        ? `完整回測：從目前 ${Math.round(inputs.currentAge)} 歲開始，先跑 ${numberFormatter.format(backtest.accumulationYears)} 年累積期到 ${Math.round(inputs.currentAge + backtest.accumulationYears)} 歲，再跑 ${numberFormatter.format(backtest.requestedYears)} 年退休提領；不使用「回測起始資產」。`
+	        : (backtest.debtMode === "debtAtRetirement"
+	          ? `帶債模式：第 ${numberFormatter.format(backtest.retirementStartYear)} 年退休，預設起始資產 ${money(backtest.defaultStartingAssets)}，其中當時貸款餘額 ${money(backtest.startingDebt)}。`
+	          : `無債模式：退休回測假設貸款已還清，起始資產預設為 ${money(backtest.defaultStartingAssets)}。`);
 
 	      const warnings = [...result.warnings, ...backtest.warnings];
 	      if (savingsRate < 0) warnings.unshift("目前年度現金流為負，FIRE 時間會高度依賴既有資產成長。");
@@ -3025,9 +3433,13 @@
 	        backtest: {
 	          source: HISTORICAL_RETURN_SOURCE,
 	          strategy: withdrawalStrategyName(backtest.strategy),
+	          scope: backtest.scope,
+	          scopeName: backtest.scopeName,
 	          mode: backtest.debtMode,
 	          modeName: backtest.modeName,
 	          years: backtest.requestedYears,
+	          accumulationYears: backtest.accumulationYears,
+	          totalYears: backtest.totalYears,
 	          retirementStartYear: backtest.retirementStartYear,
 	          startingAssets: backtest.startingAssets,
 	          defaultStartingAssets: backtest.defaultStartingAssets,
@@ -3040,6 +3452,8 @@
 	          lifestyleWithdrawalRate: backtest.lifestyleRate,
 	          successRate: backtest.successRate,
 	          successCount: backtest.successCount,
+	          accumulationFailureCount: backtest.accumulationFailureCount,
+	          readinessFailureCount: backtest.readinessFailureCount,
 	          debtShortfallCount: backtest.debtShortfallCount,
 	          lifestyleFailureCount: backtest.lifestyleFailureCount,
 	          runCount: backtest.windows.length,
