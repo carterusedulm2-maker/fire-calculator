@@ -1993,6 +1993,12 @@
       return sorted[lower] * (1 - weight) + sorted[upper] * weight;
     }
 
+    function quantileOrNaN(values, q) {
+      const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+      if (!sorted.length) return NaN;
+      return quantile(sorted, q);
+    }
+
     function withdrawalStrategyName(strategy) {
       if (strategy === "fixedPercent") return "固定比例提領";
       if (strategy === "guardrails") return "護欄提領";
@@ -2028,7 +2034,12 @@
       if (!window) return "--";
       if (window.success) return `實質終值 ${money(window.endingPortfolioReal)}`;
       if (window.accumulationFailureYear) return `${window.accumulationFailureYear} 年累積期資產耗盡`;
-      if (window.readinessFailureYear) return `${window.readinessFailureYear} 年退休仍未符合無債條件`;
+      if (window.readinessFailureYear) {
+        const readinessAssets = Number.isFinite(window.retirementEntryAssetsReal)
+          ? ` · 退休時實質資產 ${money(window.retirementEntryAssetsReal)}`
+          : "";
+        return `${window.readinessFailureYear} 年退休仍未符合無債條件${readinessAssets}`;
+      }
       if (window.debtShortfallYear) return `${window.debtShortfallYear} 年貸款短缺`;
       if (window.failureYear) return `${window.failureYear} 年生活提領失敗`;
       return "未通過";
@@ -2055,6 +2066,13 @@
       return roundedRank(b, unit) - roundedRank(a, unit);
     }
 
+    function backtestWindowRankPortfolio(window) {
+      if (Number.isFinite(window.rankingPortfolioReal)) return window.rankingPortfolioReal;
+      if (Number.isFinite(window.endingPortfolioReal)) return window.endingPortfolioReal;
+      if (Number.isFinite(window.endingPortfolio)) return window.endingPortfolio;
+      return 0;
+    }
+
     function compareHistoricalWindows(a, b) {
       const aFailed = !a.success;
       const bFailed = !b.success;
@@ -2067,7 +2085,6 @@
         const aDebtShortfall = Boolean(a.debtShortfallYear);
         const bDebtShortfall = Boolean(b.debtShortfallYear);
         if (aDebtShortfall !== bDebtShortfall) return aDebtShortfall ? -1 : 1;
-        return a.startYear - b.startYear;
       }
 
       const aMinLifestyle = a.minRealLifestyleWithdrawal ?? a.minLifestyleWithdrawal;
@@ -2085,8 +2102,8 @@
       if (aYearsBelow !== bYearsBelow) {
         return bYearsBelow - aYearsBelow;
       }
-      const aEnding = a.endingPortfolioReal ?? a.endingPortfolio;
-      const bEnding = b.endingPortfolioReal ?? b.endingPortfolio;
+      const aEnding = backtestWindowRankPortfolio(a);
+      const bEnding = backtestWindowRankPortfolio(b);
       const endingComparison = compareRoundedAscending(aEnding, bEnding);
       if (endingComparison) return endingComparison;
 
@@ -2267,10 +2284,10 @@
         }
       }
 
-	      const startingAssets = Math.max(1, manualStartingAssets > 0 ? manualStartingAssets : defaultStartingAssets);
-	      const lifestyleBaseAssets = Math.max(1, startingAssets - startingDebt);
+	      const startingAssets = Math.max(0, manualStartingAssets > 0 ? manualStartingAssets : defaultStartingAssets);
+	      const lifestyleBaseAssets = Math.max(0, startingAssets - startingDebt);
 	      const firstWithdrawal = initialBacktestWithdrawal(inputs, startingAssets, firstLifestyleWithdrawal, lifestyleBaseAssets);
-	      const lifestyleRate = firstLifestyleWithdrawal / lifestyleBaseAssets;
+	      const lifestyleRate = lifestyleBaseAssets > 0 ? firstLifestyleWithdrawal / lifestyleBaseAssets : NaN;
 	      if (debtMode === "debtAtRetirement" && startingAssets <= startingDebt) {
 	        warnings.push("回測起始資產低於或等於退休起始貸款餘額，生活提領會高度受限。");
 	      }
@@ -2605,11 +2622,12 @@
         let previousRealLifestyleWithdrawal = null;
         let retirementStartingAssets = 0;
         let retirementStartingDebt = 0;
+        let retirementEntryAssetsReal = 0;
         let firstLifestyleWithdrawal = 0;
         let firstWithdrawal = 0;
-        let lifestyleBaseAssets = 1;
-        let initialRate = 0;
-        let lifestyleRate = 0;
+        let lifestyleBaseAssets = 0;
+        let initialRate = NaN;
+        let lifestyleRate = NaN;
         let portfolio = eligibleHistoricalAssets(assets, inputs);
 
         for (let offset = 0; offset < accumulationYears; offset += 1) {
@@ -2643,10 +2661,11 @@
           portfolio = eligibleHistoricalAssets(assets, inputs);
           retirementStartingAssets = portfolio;
           retirementStartingDebt = accumulationDebts.mortgage.balance + accumulationDebts.loan.balance;
+          retirementEntryAssetsReal = cumulativeInflation > 0 ? retirementStartingAssets / cumulativeInflation : retirementStartingAssets;
           firstLifestyleWithdrawal = Math.max(0, expensesAnnual);
-          lifestyleBaseAssets = Math.max(1, retirementStartingAssets - retirementStartingDebt);
+          lifestyleBaseAssets = Math.max(0, retirementStartingAssets - retirementStartingDebt);
           firstWithdrawal = initialBacktestWithdrawal(inputs, retirementStartingAssets, firstLifestyleWithdrawal, lifestyleBaseAssets);
-          lifestyleRate = firstLifestyleWithdrawal / lifestyleBaseAssets;
+          lifestyleRate = lifestyleBaseAssets > 0 ? firstLifestyleWithdrawal / lifestyleBaseAssets : NaN;
           initialRate = inputs.withdrawalStrategy === "fixedPercent" && lifestyleBaseAssets > 0
             ? firstWithdrawal / lifestyleBaseAssets
             : lifestyleRate;
@@ -2766,6 +2785,11 @@
           }
         }
 
+        const failedBeforeWithdrawal = Boolean(accumulationFailureYear || readinessFailureYear);
+        const endingPortfolio = failedBeforeWithdrawal ? 0 : portfolio;
+        const endingPortfolioReal = failedBeforeWithdrawal
+          ? 0
+          : (endingInflationFactor > 0 ? endingPortfolio / endingInflationFactor : endingPortfolio);
         windows.push({
           startYear,
           endYear,
@@ -2774,9 +2798,13 @@
           readinessFailureYear,
           failureYear,
           debtShortfallYear,
-          endingPortfolio: portfolio,
-          endingPortfolioReal: endingInflationFactor > 0 ? portfolio / endingInflationFactor : portfolio,
+          endingPortfolio,
+          endingPortfolioReal,
           endingDebt: accumulationDebts.mortgage.balance + accumulationDebts.loan.balance,
+          retirementEntryAssets: retirementStartingAssets,
+          retirementEntryAssetsReal,
+          enteredWithdrawalPhase: annualSeries.length > 0,
+          rankingPortfolioReal: failedBeforeWithdrawal ? retirementEntryAssetsReal : endingPortfolioReal,
           totalWithdrawal,
           totalLifestyleWithdrawal,
           totalDebtPayment,
@@ -2811,9 +2839,16 @@
       const debtShortfallCount = windows.filter((window) => window.debtShortfallYear).length;
       const lifestyleFailureCount = windows.filter((window) => !window.accumulationFailureYear && !window.readinessFailureYear && !window.debtShortfallYear && window.failureYear).length;
       const firstWithdrawals = windows.map((window) => window.firstWithdrawal);
+      const firstLifestyleWithdrawals = windows.map((window) => window.firstLifestyleWithdrawal);
       const initialRates = windows.map((window) => window.initialRate * 100);
+      const lifestyleRates = windows.map((window) => window.lifestyleRate * 100);
       const startingAssetsValues = windows.map((window) => window.startingAssets);
       const startingDebtValues = windows.map((window) => window.startingDebt);
+      const lifestyleBaseAssetsValues = windows.map((window) => window.lifestyleBaseAssets);
+
+      if (windows.length < 30) {
+        warnings.push(`完整回測目前只有 ${numberFormatter.format(windows.length)} 組歷史序列，成功率容易被單一區間放大；建議縮短累積期或提領年限後再比較。`);
+      }
 
       return {
         allocation,
@@ -2833,11 +2868,11 @@
         successRate: windows.length ? successCount / windows.length * 100 : 0,
         startingAssets: quantile(startingAssetsValues, 0.5),
         firstWithdrawal: quantile(firstWithdrawals, 0.5),
-        firstLifestyleWithdrawal: quantile(firstWithdrawals, 0.5),
+        firstLifestyleWithdrawal: quantile(firstLifestyleWithdrawals, 0.5),
         startingDebt: quantile(startingDebtValues, 0.5),
-        lifestyleBaseAssets: Math.max(1, quantile(startingAssetsValues, 0.5) - quantile(startingDebtValues, 0.5)),
-        lifestyleRate: quantile(initialRates, 0.5) / 100,
-        initialRate: quantile(initialRates, 0.5) / 100,
+        lifestyleBaseAssets: quantile(lifestyleBaseAssetsValues, 0.5),
+        lifestyleRate: quantileOrNaN(lifestyleRates, 0.5) / 100,
+        initialRate: quantileOrNaN(initialRates, 0.5) / 100,
         debtMode,
         modeName: backtestModeName(debtMode),
         retirementStartYear: accumulationYears,
@@ -3258,9 +3293,22 @@
       container.innerHTML = backtest.representativeWindows.map((scenario) => {
         const window = scenario.window;
         const status = backtestWindowStatus(window);
+        const enteredWithdrawal = window.enteredWithdrawalPhase !== false && (window.annualSeries || []).length > 0;
+        const portfolioMetricLabel = enteredWithdrawal ? "實質期末資產" : "退休時實質資產";
+        const portfolioMetricValue = enteredWithdrawal
+          ? window.endingPortfolioReal
+          : window.retirementEntryAssetsReal;
+        const minWithdrawalText = enteredWithdrawal ? money(window.minRealLifestyleWithdrawal) : "未進入";
+        const maxCutText = enteredWithdrawal ? percent(window.maxRealLifestyleCut) : "--";
+        const yearsBelowText = enteredWithdrawal
+          ? `${numberFormatter.format(window.yearsBelowInitialRealLifestyle)} 年`
+          : "--";
         const debtText = backtest.debtMode === "debtAtRetirement"
           ? ` · 貸款支付 ${money(window.totalDebtPayment)}`
           : "";
+        const footnote = enteredWithdrawal
+          ? `綠=名目生活提領，橘=貸款支付；實質指標折回首年購買力，名目總提領 ${money(window.totalWithdrawal)}${debtText}。`
+          : `此區間未進入退休提領期；退休期末資產 KPI 計為 ${money(0)}，同類失敗排序參考退休時實質資產 ${money(window.retirementEntryAssetsReal)}。`;
         return `
           <article class="history-card">
             <header>
@@ -3272,20 +3320,20 @@
             </header>
             <div class="scenario-metrics">
               <div class="scenario-metric">
-                <span>實質期末資產</span>
-                <strong>${money(window.endingPortfolioReal)}</strong>
+                <span>${portfolioMetricLabel}</span>
+                <strong>${money(portfolioMetricValue)}</strong>
               </div>
               <div class="scenario-metric">
                 <span>最低實質提領</span>
-                <strong>${money(window.minRealLifestyleWithdrawal)}</strong>
+                <strong>${minWithdrawalText}</strong>
               </div>
               <div class="scenario-metric">
                 <span>最大實質降幅</span>
-                <strong>${percent(window.maxRealLifestyleCut)}</strong>
+                <strong>${maxCutText}</strong>
               </div>
               <div class="scenario-metric">
                 <span>低於首年實質</span>
-                <strong>${numberFormatter.format(window.yearsBelowInitialRealLifestyle)} 年</strong>
+                <strong>${yearsBelowText}</strong>
               </div>
             </div>
             <div class="scenario-bars" aria-label="${scenario.label}年度提領組成">
@@ -3298,7 +3346,7 @@
                 ${renderHistoricalEvents(window)}
               </div>
             </div>
-            <p class="scenario-footnote">綠=名目生活提領，橘=貸款支付；實質指標折回首年購買力，名目總提領 ${money(window.totalWithdrawal)}${debtText}。</p>
+            <p class="scenario-footnote">${footnote}</p>
           </article>
         `;
       }).join("");
