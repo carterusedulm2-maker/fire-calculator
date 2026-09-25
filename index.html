@@ -824,6 +824,45 @@
       height: var(--debt-share, 0%);
     }
 
+    .scenario-context {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .scenario-context p {
+      color: #38403b;
+      font-size: 0.72rem;
+      font-weight: 750;
+      line-height: 1.42;
+      margin: 0;
+    }
+
+    .scenario-context strong {
+      color: var(--ink);
+      font-weight: 950;
+    }
+
+    .scenario-events {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .scenario-events span {
+      background: #fff;
+      border: 1px solid #d5ded7;
+      border-radius: 999px;
+      color: #4e5a53;
+      font-size: 0.66rem;
+      font-weight: 850;
+      line-height: 1.25;
+      padding: 4px 7px;
+    }
+
     .scenario-footnote {
       color: var(--muted);
       font-size: 0.72rem;
@@ -1555,6 +1594,25 @@
       range: `${HISTORICAL_RETURNS[0].year}-${HISTORICAL_RETURNS[HISTORICAL_RETURNS.length - 1].year}`
     };
 
+    const HISTORICAL_EVENT_MARKERS = [
+      { start: 1929, end: 1932, label: "1929 股災 / 大蕭條" },
+      { start: 1939, end: 1945, label: "第二次世界大戰" },
+      { start: 1946, end: 1948, label: "戰後通膨調整" },
+      { start: 1950, end: 1953, label: "韓戰" },
+      { start: 1965, end: 1982, label: "高通膨時代" },
+      { start: 1973, end: 1974, label: "第一次石油危機 / 熊市" },
+      { start: 1979, end: 1982, label: "第二次石油衝擊 / Volcker 升息" },
+      { start: 1982, end: 1999, label: "通膨回落與長多" },
+      { start: 1987, end: 1987, label: "黑色星期一" },
+      { start: 1990, end: 1991, label: "波灣戰爭 / 衰退" },
+      { start: 1997, end: 1998, label: "亞洲金融風暴 / LTCM" },
+      { start: 2000, end: 2002, label: "網路泡沫破裂" },
+      { start: 2007, end: 2009, label: "全球金融海嘯" },
+      { start: 2009, end: 2021, label: "低利率長多" },
+      { start: 2020, end: 2020, label: "COVID-19 急跌" },
+      { start: 2022, end: 2022, label: "通膨升溫與股債雙跌" }
+    ];
+
     const fields = [...document.querySelectorAll("[data-field]")];
     const percentOutputs = [...document.querySelectorAll("[data-output]")];
     const form = document.getElementById("fireForm");
@@ -2012,9 +2070,9 @@
       if (!sorted.length) return [];
       const medianIndex = Math.floor((sorted.length - 1) / 2);
       return [
-        { key: "worst", label: "最糟區間", window: sorted[0] },
-        { key: "median", label: "中位區間", window: sorted[medianIndex] },
-        { key: "best", label: "最好區間", window: sorted[sorted.length - 1] }
+        { key: "worst", label: "最糟區間", rank: 1, total: sorted.length, window: sorted[0] },
+        { key: "median", label: "中位區間", rank: medianIndex + 1, total: sorted.length, window: sorted[medianIndex] },
+        { key: "best", label: "最好區間", rank: sorted.length, total: sorted.length, window: sorted[sorted.length - 1] }
       ];
     }
 
@@ -2768,6 +2826,32 @@
       }).join("");
     }
 
+    function historicalEventsForWindow(window) {
+      const events = HISTORICAL_EVENT_MARKERS.filter((event) => {
+        return event.start <= window.endYear && event.end >= window.startYear;
+      });
+      if (events.length) return events;
+      return [{ label: "未命中預設事件標籤" }];
+    }
+
+    function scenarioSelectionReason(scenario, backtest) {
+      const rankText = `第 ${scenario.rank}/${scenario.total} 名`;
+      const rankingBasis = "排序先看是否提早失敗，再看最低實質生活提領、最大實質降幅、低於首年年數與實質期末資產。";
+      if (scenario.key === "worst") {
+        return `${rankText}，代表這組輸入下最嚴苛的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+      }
+      if (scenario.key === "best") {
+        return `${rankText}，代表這組輸入下對提領最友善的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+      }
+      return `${rankText}，不是平均報酬路徑，而是排序落在中間的真實 ${backtest.requestedYears} 年序列。${rankingBasis}`;
+    }
+
+    function renderHistoricalEvents(window) {
+      return historicalEventsForWindow(window).map((event) => {
+        return `<span>${event.label}</span>`;
+      }).join("");
+    }
+
     function renderHistoricalScenarioCards(backtest) {
       const container = document.getElementById("historicalScenarioCards");
       container.innerHTML = backtest.representativeWindows.map((scenario) => {
@@ -2805,6 +2889,13 @@
             </div>
             <div class="scenario-bars" aria-label="${scenario.label}年度提領組成">
               ${renderScenarioBars(window)}
+            </div>
+            <div class="scenario-context">
+              <p><strong>為什麼選這段：</strong>${scenarioSelectionReason(scenario, backtest)}</p>
+              <p><strong>中間遇到：</strong>事件標籤只做閱讀提示，不參與排序。</p>
+              <div class="scenario-events" aria-label="${scenario.label}重疊歷史事件">
+                ${renderHistoricalEvents(window)}
+              </div>
             </div>
             <p class="scenario-footnote">綠=名目生活提領，橘=貸款支付；實質指標折回首年購買力，名目總提領 ${money(window.totalWithdrawal)}${debtText}。</p>
           </article>
